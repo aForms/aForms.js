@@ -1,2 +1,1 @@
-
-export default class DummyClass {}
+export * from './a-form.model';
