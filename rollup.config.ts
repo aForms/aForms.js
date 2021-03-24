@@ -26,7 +26,8 @@ export default {
    ],
    // Indicate here external modules you don't wanna include in your bundle (i.e.: 'lodash')
    external: [
-       'jquery'
+       'jquery',
+      /@babel\/runtime/
    ],
    watch: {
       include: 'src/**',
@@ -50,13 +51,11 @@ export default {
       nodeResolve(),
       // Resolve source maps to the original source
       sourceMaps(),
-      babel({ babelHelpers: 'bundled'}),
+      babel({ babelHelpers: 'runtime', plugins: ['@babel/plugin-transform-runtime']}),
       generatePackageJson({
          baseContents: () => ({
             name: pkg.name,
-            main: "a-forms.cjs.js",
-            module: "a-forms.esm.js",
-            browser: "a-forms.umd.js",
+            main: "index.js",
             typings: "index.d.ts",
             dependencies: {
                "jquery": "^3.5.1"

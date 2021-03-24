@@ -5,5 +5,6 @@ export interface TextCommonModal {
     inputMask?: string|string[],
     input?: boolean,
     autoComplete?: "on"|"off",
-    case?: "uppercase"|"mixed"|"lowercase"
+    case?: "uppercase"|"mixed"|"lowercase",
+    spellcheck?: boolean
 }

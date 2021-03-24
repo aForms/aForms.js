@@ -2,7 +2,7 @@ import {AFormModel, AFormModelClass} from "../../a-form.model";
 
 export interface SignatureModal {
     footer?: string,
-    width?: string,
+    width?: string|number,
     height?: string,
     penColor?: string,
     backgroundColor?: string,
