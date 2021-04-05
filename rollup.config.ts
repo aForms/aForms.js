@@ -58,7 +58,8 @@ export default {
             main: "index.js",
             typings: "index.d.ts",
             dependencies: {
-               "jquery": "^3.5.1"
+               "jquery": "^3.5.1",
+               "json-logic-js": "^2.0.0"
             },
             private: false
          })

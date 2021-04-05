@@ -16,16 +16,24 @@ export class RendererHelper {
     renderComponent(aFormModel: AFormModel, container: HTMLDivElement) {
         switch (aFormModel.type) {
             case "button":
-                container?.append(new ButtonBuilder(aFormModel, this.aFormsClass).build())
+                const buttonBuilder = new ButtonBuilder(aFormModel, this.aFormsClass)
+                const buttonBuilderDiv = buttonBuilder.build();
+                container?.append(buttonBuilderDiv)
                 break;
             case "textarea":
-                container?.append(new TextareaBuilder(aFormModel, this.aFormsClass).build())
+                const textareaBuilder = new TextareaBuilder(aFormModel, this.aFormsClass)
+                const textareaBuilderDiv = textareaBuilder.build()
+                container?.append(textareaBuilderDiv)
                 break;
             case "textfield":
-                container?.append(new TextfieldBuilder(aFormModel, this.aFormsClass).build())
+                const textfieldBuilder = new TextfieldBuilder(aFormModel, this.aFormsClass)
+                const textfieldBuilderDiv = textfieldBuilder.build()
+                container?.append(textfieldBuilderDiv)
                 break;
             case "panel":
-                container?.append(new PanelBuilder(aFormModel, this.aFormsClass).createPanel())
+                const panelBuilder = new PanelBuilder(aFormModel, this.aFormsClass)
+                const panelBuilderDiv = panelBuilder.createPanel()
+                container?.append(panelBuilderDiv)
                 break;
             case "content":
                 container?.append(new ContentBuilder(aFormModel, this.aFormsClass).build())
@@ -34,23 +42,34 @@ export class RendererHelper {
                 container?.append(new ColumnsBuilder(aFormModel, this.aFormsClass).createColumns())
                 break;
             case "email":
-                container?.append(new TextfieldBuilder(aFormModel, this.aFormsClass).build({type: aFormModel.type}))
+                const textfieldBuilderEmail = new TextfieldBuilder(aFormModel, this.aFormsClass)
+                const textfieldBuilderEmailDiv = textfieldBuilderEmail.build({type: aFormModel.type})
+                container?.append(textfieldBuilderEmailDiv)
                 break;
             case "phoneNumber":
-                container?.append(new TextfieldBuilder(aFormModel, this.aFormsClass).build())
+                const textfieldBuilderPhone = new TextfieldBuilder(aFormModel, this.aFormsClass)
+                const textfieldBuilderPhoneDiv = textfieldBuilderPhone.build({type: aFormModel.type})
+                container?.append(textfieldBuilderPhoneDiv)
                 break;
             case "survey":
                 break;
             case "signature":
                 break;
             case "radio":
-                container?.append(new RadioBuilder(aFormModel, this.aFormsClass).build())
+                const radioBuilder = new RadioBuilder(aFormModel, this.aFormsClass)
+                const radioBuilderDiv = radioBuilder.build()
+                container?.append(radioBuilderDiv)
                 break;
             case "select":
-                container?.append(new SelectBuilder(aFormModel, this.aFormsClass).build())
+                const selectBuilder = new SelectBuilder(aFormModel, this.aFormsClass)
+                const selectBuilderDiv = selectBuilder.build()
+                container?.append(selectBuilderDiv)
                 break;
             default:
-                container?.append(new BasicWrapperBuilder(aFormModel, this.aFormsClass).createPanel())
+                const basicWrapperBuilder = new BasicWrapperBuilder(aFormModel, this.aFormsClass)
+                const basicWrapperBuilderDiv = basicWrapperBuilder.createPanel()
+                container?.append(basicWrapperBuilderDiv)
+                break;
         }
     }
 

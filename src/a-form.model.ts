@@ -1,6 +1,6 @@
 import {TextfieldModal} from "./modals/textfield/textfield.modal";
 import {TextareaModal} from "./modals/textarea/textarea.modal";
-import {BehaviorSubject, Subject} from "rxjs";
+import {BehaviorSubject, Subject, Subscription} from "rxjs";
 import {ButtonModal} from "./modals/button/button.modal";
 import {PanelModal} from "./modals/layout/panel/panel.modal";
 import {ColumnsModal} from "./modals/layout/columns/columns.modal";
@@ -9,19 +9,27 @@ import {SurveyModal} from "./modals/survey/survey.modal";
 import {ContentModal} from "./modals/content/content.modal";
 import {BasicWrapperModal} from "./modals/layout/basic-wrapper/basic-wrapper.modal";
 import {RendererHelper} from "./helpers/renderer.helper";
-import {ConfigureStore} from "./store";
 import {SelectModal} from "./modals/select/select.modal";
 import { RadioModal } from "./modals/radio/radio.modal";
+import {FunctionsHelpers} from "./helpers/functions.helpers";
+import {WizardBuilder} from "./modals/wizard/wizard.modal";
+import {ConditionalHelper} from "./helpers/conditional.helper";
+// @ts-ignore
+import { v4 as uuidV4 } from 'uuid';
+import {ConfigureStore} from "./store";
+import {configAdded, formConfig} from "./store/reducers/form-config.reducer";
+import {FormData, getFormById, insertFormData, updateFormData} from "./store/reducers/form-data.reducer";
+import {EnhancedStore, Unsubscribe} from "@reduxjs/toolkit";
 
 declare var $: JQueryStatic;
 
 export interface AFormModel extends ProjectModel, TextfieldModal, TextareaModal, ButtonModal,
     PanelModal, ColumnsModal, SignatureModal, SurveyModal, ContentModal, BasicWrapperModal, SelectModal, RadioModal {
-    display?: "form"|"wizard",
+    display?: "form" | "wizard",
     settings?: any,
     components?: AFormModel[],
-    type?: "textfield"|"button"|"textarea"|"panel"|"form"|"content"|"signature"|"columns"|"survey"|"phoneNumber"|"email"|"select"|"radio",
-    inputType?: "phoneNumber"|"email"|"text"|"radio",
+    type?: "textfield" | "button" | "textarea" | "panel" | "form" | "content" | "signature" | "columns" | "survey" | "phoneNumber" | "email" | "select" | "radio" | "wizard",
+    inputType?: "phoneNumber" | "email" | "text" | "radio",
     key?: string,
     tableView?: boolean,
     hideLabel?: boolean,
@@ -30,20 +38,20 @@ export interface AFormModel extends ProjectModel, TextfieldModal, TextareaModal,
     modalEdit?: boolean,
     disabled?: boolean,
     autofocus?: boolean,
-    tabindex?: number|string,
-    customClass?: string|string[],
-    autocomplete?: "on"|"off",
+    tabindex?: number | string,
+    customClass?: string | string[],
+    autocomplete?: "on" | "off",
     prefix?: string,
     suffix?: string,
     tooltip?: string,
     description?: string,
     placeholder?: string,
     clearOnHide?: boolean,
-    labelPosition?: "left-left"|"left-right"|"right-left"|"right-right"|"bottom"|"top",
-    customDefaultValue?: string|any,
-    calculateValue?: string|any,
+    labelPosition?: "left-left" | "left-right" | "right-left" | "right-right" | "bottom" | "top",
+    customDefaultValue?: string | any,
+    calculateValue?: string | any,
     encrypted?: boolean,
-    redrawOn?: "data"|"textArea"|"submit"|"",
+    redrawOn?: "data" | "textArea" | "submit" | "",
     validate?: Validation,
     validateOn?: string,
     unique?: boolean,
@@ -53,9 +61,9 @@ export interface AFormModel extends ProjectModel, TextfieldModal, TextareaModal,
     customConditional?: string,
     attributes?: any,
     tags?: string[],
-    defaultValue?: string|any,
+    defaultValue?: string | any,
     kickbox?: any,
-    theme?: "info"|"primary"|"secondary"|"success"|"danger"|"warning"|"default",
+    theme?: "info" | "primary" | "secondary" | "success" | "danger" | "warning" | "default",
     allowMultipleMasks?: boolean,
     dbIndex?: boolean,
     indexeddb?: any,
@@ -75,7 +83,11 @@ export interface AFormModel extends ProjectModel, TextfieldModal, TextareaModal,
     allowPrevious?: boolean,
     revisions?: string,
     _vid?: number,
-    controller?: string
+    controller?: string,
+    idPath?: string,
+    useExactSearch?: boolean,
+    dataGridLabel?: boolean,
+    src?: string
 }
 
 export interface ProjectModel {
@@ -98,32 +110,36 @@ export interface Validation {
     customMessage?: string,
     json?: any,
     custom?: string,
-    minLength?: number|string,
-    maxLength?: number|string,
-    minWords?: number|string,
-    maxWords?: number|string,
+    minLength?: number | string,
+    maxLength?: number | string,
+    minWords?: number | string,
+    maxWords?: number | string,
     customPrivate?: boolean,
-    strictDateValidation?: boolean|"",
+    strictDateValidation?: boolean | "",
     select?: boolean,
     multiple?: boolean,
     unique?: boolean
 }
 
 export interface Conditional {
-    show?: boolean|string,
-    when?: string|null,
-    eq?: string|number,
+    show?: boolean | string,
+    when?: string | null,
+    eq?: string | number,
     json?: any
 }
 
 
 export interface FormEvents {
-    eventName: 'initializing'|'initialized'|'rendered'|'errors'|'valid'|'change',
+    eventName: 'initializing' | 'initialized' | 'rendered' | 'errors' | 'valid' | 'change'|'ready',
     details?: {
-        eventInfo: Event,
+        eventInfo?: Event,
         key?: string,
         value?: any
     }
+}
+
+export interface LibraryConfig {
+    primaryColor?: string;
 }
 
 /**
@@ -133,11 +149,9 @@ export interface FormEvents {
  */
 export class AFormModelClass {
 
-    private aFormSubject?: BehaviorSubject<AFormModel|undefined> = new BehaviorSubject<AFormModel|undefined>(this.aForm)
+    private aFormSubject?: BehaviorSubject<AFormModel | undefined> = new BehaviorSubject<AFormModel | undefined>(this.aForm)
 
     formElement: HTMLFormElement | undefined;
-
-    aFormHolder: any = this.getForm();
 
     private aFormData: BehaviorSubject<any> = new BehaviorSubject<any>({});
 
@@ -145,9 +159,41 @@ export class AFormModelClass {
 
     notifyFormEvents: Subject<FormEvents> = new Subject<FormEvents>();
 
-    store = new ConfigureStore(this.uniqFormId ? this.uniqFormId : "").init();
+    uniqFormId: string = uuidV4() as string
 
-    constructor(private aForm?: AFormModel, private divElement?: HTMLDivElement, private uniqFormId?: string) {
+    conditionalHelper = new ConditionalHelper();
+
+    validationHelper = new FunctionsHelpers(this);
+
+    formWizard: WizardBuilder | undefined;
+
+    removableSubscribers: Unsubscribe[] | Subscription[] | any = [];
+
+    formManager: any;
+
+    store: EnhancedStore;
+
+    constructor(private aForm?: AFormModel, private divElement?: HTMLDivElement, uniqFormId?: string, libConfig?: LibraryConfig) {
+
+        if (uniqFormId) {
+            this.uniqFormId = uniqFormId
+        }
+        this.store = new ConfigureStore(this).configureStore()
+
+        this.store.dispatch(configAdded({
+            name: this.uniqFormId,
+            createdOn: new Date().toDateString(),
+            lastUpdated: new Date().toDateString()
+        }))
+
+        this.store.dispatch(insertFormData({id: uniqFormId ?? uuidV4(), data: {}, currentPage: 0}))
+
+        if (libConfig) {
+            if (libConfig.primaryColor) {
+                document.documentElement.style.setProperty('--primary-color', libConfig.primaryColor);
+            }
+        }
+
         this.initializeAForm?.()
     }
 
@@ -161,6 +207,8 @@ export class AFormModelClass {
             throw Error("A Form json and div element location are required to initialize library.")
         }
         this.aFormSubject?.next(this.aForm);
+        // @ts-ignore
+        window["AFORM"] = this
     }
 
     /**
@@ -206,7 +254,7 @@ export class AFormModelClass {
                 return this.renderForm()
             }
             case "wizard": {
-                return this.renderForm()
+                return this.renderWizard()
             }
             default:
                 return new Promise<AFormModelClass>((resolve, reject) => reject("Display type not available."))
@@ -221,20 +269,21 @@ export class AFormModelClass {
     private renderForm(): Promise<AFormModelClass> {
         return new Promise<AFormModelClass>((resolve, reject) => {
             try {
-                $(this.divElement as HTMLDivElement).addClass('ui').addClass('container');
+                $(this.divElement as HTMLDivElement).addClass('ui');
                 const form = document.createElement('form');
                 form.classList.add('ui', 'form');
+                form.setAttribute('id', this.uniqFormId)
                 this.formElement = form;
                 const divContainer: HTMLDivElement = document.createElement('div');
                 divContainer.classList.add('a-form-content-holder');
+                divContainer.style.outline = 'none';
+                divContainer.style.margin = '1rem';
+                divContainer.tabIndex = -1
                 if (this.aForm && this.aForm.components) {
                     this.renderer.renderComponent(this.aForm, divContainer)
                     this.formElement?.append(divContainer)
                 }
                 this.divElement?.append(form)
-                if (this.divElement) {
-                    this.aFormHolder = $(this.divElement).find('form')
-                }
                 // Notify form ready event
                 this.notifyFormEvents.next({eventName: 'rendered'})
                 resolve(this)
@@ -249,10 +298,42 @@ export class AFormModelClass {
      *
      * @description This method renders the components within wizard, can include forms internally.
      */
-    private renderWizard() {
-        const divContainer = document.createElement('div');
-        $(this.divElement as HTMLDivElement).append(divContainer).addClass('ui').addClass('container');
-        divContainer.innerText = (this.aForm?.label as string)
+    private renderWizard(): Promise<AFormModelClass> {
+        return new Promise((resolve, reject) => {
+            try {
+                $(this.divElement as HTMLDivElement).addClass('ui');
+                const form = document.createElement('form');
+                form.classList.add('ui', 'form', 'segment');
+                form.setAttribute('id', this.uniqFormId)
+                this.formElement = form;
+                const divContainer: HTMLDivElement = document.createElement('div');
+                divContainer.classList.add('a-form-wizard-holder');
+                divContainer.style.outline = 'none';
+                divContainer.style.margin = '1rem';
+                divContainer.tabIndex = -1
+                if (this.aForm && this.aForm.components) {
+                    this.formWizard = new WizardBuilder(this.aForm, this, this.conditionalHelper)
+                    const formContainerDiv = this.formWizard.build();
+                    divContainer?.append(formContainerDiv)
+                    this.formElement?.append(divContainer)
+                }
+                const errorBlock = document.createElement('div')
+                errorBlock.classList.add('ui', 'error', 'message')
+                form.append(errorBlock)
+                this.divElement?.append(form)
+
+                // An async dispatch to trigger initial page load.
+                const asyncDispatch = (dispatch: (arg0: { payload: FormData; type: string; }) => void, getState: () => any) => {
+                    dispatch(updateFormData({id: this.uniqFormId, currentPage: 0}))
+                }
+                // @ts-ignore
+                this.store.dispatch(asyncDispatch)
+                this.notifyFormEvents.next({eventName: 'rendered'})
+                resolve(this)
+            } catch (e) {
+                reject(e)
+            }
+        })
     }
 
     /**
@@ -272,10 +353,7 @@ export class AFormModelClass {
      * @description This method returns the form data. The data is consolidated based on keys provided while rendering.
      */
     getFormData() {
-        if (this.divElement) {
-            const form = this.aFormHolder.form('get values');
-            this.aFormData?.next(form);
-        }
+        return $('#' + this.uniqFormId).form('get values');
     }
 
 
@@ -286,8 +364,12 @@ export class AFormModelClass {
      */
     resetForm() {
         if (this.divElement) {
-            this.aFormHolder.form('reset');
+            $('#' + this.uniqFormId).form('reset');
         }
+    }
+
+    loadFormData() {
+        this.setFormData(getFormById(this.store.getState().formData, this.uniqFormId)?.data)
     }
 
     /**
@@ -295,24 +377,52 @@ export class AFormModelClass {
      *
      * @description Loads data to form.
      */
-    setFormData(values: any) {
+    setFormData(values: any, label?: string, reset?: boolean) {
         if (this.divElement) {
-            this.aFormHolder.form('set values', values);
+            const form = $('#' + this.uniqFormId)
+            if (label) {
+                if (reset) {
+                    form.form('reset', label);
+                }
+                form.form('set value', label, values);
+
+            } else {
+                if (reset) {
+                    form.form('reset');
+                }
+                form.form('set values', values);
+            }
         }
     }
 
-    /**
-     * Subscribe for formData
-     *
-     * @description This method helps client in observing for changes done on form.
-     */
-    observeFormData() {
-        return this.aFormData.asObservable();
+    resetField(label: string) {
+        $('#' + this.uniqFormId).form('reset', label);
     }
 
-    private getForm() {
-        if (this.divElement) {
-            return $(this.divElement).find('form')
+    wizardNextPage() {
+        const valid = $('#my_form').form('validate form')
+        if (valid) {
+            this.store.dispatch(updateFormData({id: this.uniqFormId, currentPage: this.formWizard?.pageIndex as number + 1}))
+
         }
+    }
+
+    wizardPreviousPage() {
+        if (this.formWizard?.pageIndex as number > 0) {
+            this.store.dispatch(updateFormData({id: this.uniqFormId, currentPage: this.formWizard?.pageIndex as number - 1}))
+        }
+    }
+
+    saveWizard() {
+        const valid = $('#my_form').form('validate form')
+        if (valid) {
+            this.notifyChanges()
+            return getFormById(this.store.getState().formData, this.uniqFormId )?.data
+        }
+    }
+
+    notifyChanges(by?: string) {
+        const currentState = getFormById(this.store.getState().formData, this.uniqFormId )
+        this.store.dispatch(updateFormData({id: this.uniqFormId, data: { ...currentState?.data, ...this.getFormData()}}))
     }
 }

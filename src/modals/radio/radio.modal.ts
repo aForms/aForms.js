@@ -4,6 +4,9 @@ import {ClassesHelper} from "../../helpers/classes.helper";
 
 // @ts-ignore
 import { v4 as uuidV4 } from 'uuid';
+import {FunctionsHelpers} from "../../helpers/functions.helpers";
+import {getFormById} from "../../store/reducers/form-data.reducer";
+import {ConditionalHelper} from "../../helpers/conditional.helper";
 
 declare var $: JQueryStatic;
 
@@ -21,15 +24,47 @@ export class RadioBuilder {
 
     options: any | undefined;
 
-    constructor(private radioModal: AFormModel, private aFormClass: AFormModelClass) { }
+    isVisible = true
+
+    constructor(private radioModal: AFormModel, private aFormClass: AFormModelClass) {
+
+        const selectStoreSubscriber = this.aFormClass.store.subscribe(() => {
+            const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
+            this.wrapper?.querySelector('.ui.dropdown')?.classList.add('loading')
+            this.isVisible = new ConditionalHelper().checkCondition(this.radioModal?.conditional?.json, data)
+            if (this.wrapper) {
+                if (this.isVisible) {
+                    $(this.wrapper).fadeIn()
+                    this.addValidation()
+                    this.aFormClass.validationHelper.calculatedValue(this.radioModal)
+                } else {
+                    $(this.wrapper).fadeOut()
+                    this.removeValidation()
+                }
+            }
+            setTimeout(() => {
+                this.wrapper?.querySelector('.dropdown')?.classList.remove('loading')
+            }, 200)
+        })
+
+        this.aFormClass.removableSubscribers.push(this.aFormClass.notifyFormEvents.asObservable().subscribe(value => {
+            if (value.eventName === 'ready') {
+                this.isVisible ? this.addValidation() : this.removeValidation()
+            }
+        }))
+
+        this.aFormClass.removableSubscribers.push(selectStoreSubscriber)
+    }
 
     build(options?: any) {
+        const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
         const uuid = uuidV4();
         this.wrapper = document.createElement('div');
+
         if (options) {
             this.options = options
         }
-        this.wrapper.classList.add('fields');
+        this.wrapper.classList.add('grouped', 'fields');
         this.wrapper.setAttribute('role', 'radiogroup')
         this.wrapper.setAttribute('aria-labelledby', uuid)
         if (this.radioModal?.customClass) {
@@ -44,16 +79,30 @@ export class RadioBuilder {
                 label.setAttribute('for', this.radioModal.key)
                 label.setAttribute('id', uuid);
                 label.innerText = this.radioModal?.label as string
-                const infoIcon = document.createElement('i')
-                infoIcon.classList.add('info', 'icon', 'circle', 'data-tooltip')
-                infoIcon.tabIndex = 0
-                infoIcon.setAttribute('data-content', 'This is a test data content.')
-                label.append(infoIcon)
+                if (this.radioModal.tooltip) {
+                    const toolTip = this.aFormClass.validationHelper.createToolTip(this.radioModal, this.wrapper)
+                    label.append(toolTip)
+                }
                 this.wrapper.append(label)
             }
             this.addRadioFields();
-            $(this.wrapper).find('.checkbox').checkbox();
+            $(this.wrapper)
+                .find('.checkbox')
+                .checkbox()
+            $(this.wrapper)
+                .find('.checkbox').on('change', () => {
+                    this.aFormClass.notifyChanges(this.radioModal.key as string)
+            })
+
         }
+
+        this.isVisible = this.aFormClass.conditionalHelper.checkCondition(this.radioModal?.conditional?.json, data)
+        if (!this.isVisible) {
+            $(this.wrapper).hide()
+        } else {
+            this.aFormClass.validationHelper.calculatedValue(this.radioModal)
+        }
+
         return this.wrapper
     }
 
@@ -62,14 +111,16 @@ export class RadioBuilder {
             const uuid = uuidV4();
             const field = document.createElement('div')
             field.classList.add('field')
+            field.setAttribute('role', 'radio')
+            field.style.margin = "unset"
             const radioDiv = document.createElement('div')
             radioDiv.classList.add('ui', 'radio', 'checkbox')
-            radioDiv.setAttribute('role', 'radio')
+            radioDiv.style.padding = "5px"
+            radioDiv.style.borderRadius = '3px'
+            this.aFormClass.validationHelper.addFocusEvent(radioDiv)
             const radioInput = document.createElement('input')
             radioInput.type = 'radio'
             radioInput.name = this.radioModal?.key as string
-            radioInput.tabIndex = 0;
-            radioInput.classList.add('hidden')
             radioInput.value = value.value as string
             radioInput.setAttribute('id', uuid)
             const radioLabel = document.createElement('label')
@@ -80,5 +131,14 @@ export class RadioBuilder {
             field.append(radioDiv)
             this.wrapper?.append(field)
         })
+    }
+
+    addValidation() {
+        const validation = this.aFormClass.validationHelper.prepareValidation(this.radioModal)
+        this.aFormClass.formManager.form('add rule', this.radioModal.key, { on: 'blur', rules: validation })
+    }
+
+    removeValidation() {
+        $('#' + this.aFormClass.uniqFormId).form('remove field', this.radioModal.key)
     }
 }

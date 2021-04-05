@@ -2,6 +2,7 @@ import {TextCommonModal} from "../text-common/text-common.modal";
 import {AFormModel, AFormModelClass} from "../../a-form.model";
 import {ClassesHelper} from "../../helpers/classes.helper";
 import {DefaultsHelper} from "../../helpers/defaults.helper";
+import {FunctionsHelpers} from "../../helpers/functions.helpers";
 
 export interface TextareaModal extends TextCommonModal {
     autoExpand?: boolean
@@ -35,11 +36,10 @@ export class TextareaBuilder {
         // create label
         const label = document.createElement('label');
         label.innerText = (this.textComponent.label as string)
-        const infoIcon = document.createElement('i')
-        infoIcon.classList.add('info', 'icon', 'circle', 'data-tooltip')
-        infoIcon.tabIndex = 0
-        infoIcon.setAttribute('data-content', 'This is a test data content.')
-        label.append(infoIcon)
+        if (this.textComponent.tooltip) {
+            const toolTip = this.aFormClass.validationHelper.createToolTip(this.textComponent, wrapper)
+            label.append(toolTip)
+        }
         wrapper.append(label)
         const textarea = document.createElement('textarea')
         if (this.textComponent?.placeholder) {

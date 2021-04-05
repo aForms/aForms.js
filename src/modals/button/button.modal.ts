@@ -1,6 +1,7 @@
 import {AFormModel, AFormModelClass} from "../../a-form.model";
 import {ClassesHelper} from "../../helpers/classes.helper";
 import {DefaultsHelper} from "../../helpers/defaults.helper";
+import {FunctionsHelpers} from "../../helpers/functions.helpers";
 
 export interface ButtonModal {
     disableOnInvalid?: boolean,
@@ -19,8 +20,19 @@ export class ButtonBuilder {
 
     constructor(private buttonModal: AFormModel, private aFormModelClass: AFormModelClass) { }
 
-    build(): HTMLButtonElement {
+    build(): HTMLDivElement {
+        const buttonWrapper = document.createElement('div')
+        buttonWrapper.style.display = 'inline'
+        buttonWrapper.style.padding = '5px'
         const buttonDiv = document.createElement('button');
+        buttonWrapper.addEventListener('focusin', () => {
+            buttonWrapper.style.outline = "auto"
+            buttonWrapper.style.outlineColor = "var(--primary-color)"
+        })
+        buttonWrapper.addEventListener('focusout', () => {
+            buttonWrapper.style.outline = "unset"
+            buttonWrapper.style.outlineColor = "unset"
+        })
         buttonDiv.innerText = (this.buttonModal.label as string)
         buttonDiv.classList.add('ui', 'button')
         buttonDiv.type = 'button'
@@ -66,7 +78,8 @@ export class ButtonBuilder {
                      this.aFormModelClass?.getFormData();
                  }
          }
-        return buttonDiv
+        buttonWrapper.append(buttonDiv)
+        return buttonWrapper
     }
 
 }

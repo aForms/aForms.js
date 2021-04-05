@@ -1,28 +1,28 @@
 import {configureStore} from '@reduxjs/toolkit'
-import {counterSlice} from "./reducers/counter.reducer";
+import {formDataSlice} from "./reducers/form-data.reducer";
 // @ts-ignore
-import { v4 as uuidV4 } from 'uuid';
+import {v4 as uuidV4} from 'uuid';
+import {formConfig} from "./reducers/form-config.reducer";
+import {AFormModelClass} from "../a-form.model";
 
-export const { incremented, decremented } = counterSlice.actions
-
+export const {} = formDataSlice.actions
 
 export class ConfigureStore {
 
-    constructor(private formId: string) { }
+    initialState = {
+        formData: formDataSlice.reducer,
+        configuration: formConfig.reducer,
+    }
 
-    init() {
-        if (!this.formId) {
-            this.formId = uuidV4()
-        }
+    constructor(private aFormClass: AFormModelClass) { }
+
+    configureStore() {
         return configureStore({
-            reducer: {
-                [this.formId]: counterSlice.reducer
-            },
+            reducer: this.initialState,
             devTools: {
-                name: this.formId,
+                name: this.aFormClass.uniqFormId,
                 trace: true
             }
         })
     }
-
 }
