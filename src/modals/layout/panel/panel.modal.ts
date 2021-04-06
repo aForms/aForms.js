@@ -1,6 +1,5 @@
 import {AFormModel, AFormModelClass} from "../../../a-form.model";
 import {ClassesHelper} from "../../../helpers/classes.helper";
-import {ConditionModeler} from "../../../helpers/conditional.helper";
 
 export interface PanelModal {
     collapsible?: boolean,

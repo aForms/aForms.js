@@ -368,8 +368,8 @@ export class AFormModelClass {
         }
     }
 
-    loadFormData() {
-        this.setFormData(getFormById(this.store.getState().formData, this.uniqFormId)?.data)
+    loadFormData(reset?: boolean) {
+        this.setFormData(getFormById(this.store.getState().formData, this.uniqFormId)?.data, undefined, reset)
     }
 
     /**

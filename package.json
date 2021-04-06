@@ -4,8 +4,7 @@
   "description": "Enhanced forms library built using fomantic-ui, jQuery and form.io.",
   "main": "src/index.ts",
   "files": [
-    "src/",
-    "dist/"
+    "src/"
   ],
   "scripts": {
     "lint": "tslint --project tsconfig.json -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",

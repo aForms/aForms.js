@@ -26,6 +26,48 @@ Enhanced forms library built using fomantic-ui, jQuery and form.io.
  - `npm run lint`: Lints code
  - `npm run commit`: Commit using conventional commit style ([husky](https://github.com/typicode/husky) will tell you to use it if you haven't :wink:)
 
+### Usage
+
+You can download the library from npm using `npm i @aforms/aformsjs -D`
+
+Please note that this library requires jquery, ensure the build tool is properly setup.
+
+### Developer environment (Customizations)
+
+For developers who intend to develop or use the library with typescript:
+
+    - import { AFormModelClass } from '@aforms/aformsjs'
+
+Since library uses jquery, and it's plugins you need to add jquery to your tsconfig.
+
+- Install jquery `npm i @types/jquery -D`
+- Add jquery to types array in tsconfig
+  
+
+    {
+        "extends": "./tsconfig.json",
+        "compilerOptions": {
+            "outDir": "../../dist/out-tsc",
+            "types": [
+                **"jquery"**
+                ]
+            },
+            "files": [
+                "./../../node_modules/@aforms/aformsjs/src/typings.d.ts",
+                "./../../node_modules/@aforms/aformsjs/src/index.ts"
+            ],
+        "include": []
+    }
+
+This will ensure your typescript compiler can read all required modules properly, additionally you get the comfort of
+debugging source code using typescript.
+
+For accessing as javascript use 
+
+    - import { AFormModelClass } from '@aforms/aformsjs/build' for es modules
+    - import { AFormModelClass } from '@aforms/aformsjs/build/cjs/a-forms.cjs.js' for cjs
+    - import { AFormModelClass } from '@aforms/aformsjs/build/umd/a-forms.umd.js' for umd
+
 ## License
 
 [The MIT License (MIT)](./LICENSE.md)

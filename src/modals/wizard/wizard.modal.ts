@@ -55,8 +55,17 @@ export class WizardBuilder {
                 this.aFormClass.renderer
                     .renderComponent(this.aFormModel.components?.[currentState?.currentPage as number] as AFormModel, contentHolder)
 
-                if (this.aFormClass.formManager) {
-                    this.aFormClass.formManager.form('clear')
+                if (this.aFormModel.components?.length) {
+                    if (this.pageIndex >= 0 && this.pageIndex < (this.aFormModel.components?.length - 1)) {
+                        // TODO: Add next button
+                    }
+                    if (this.pageIndex >= 1 && this.pageIndex <= (this.aFormModel.components?.length - 1)) {
+                        // TODO: Add previous button
+                    }
+                    if (this.pageIndex === (this.aFormModel.components?.length - 1)) {
+                        // TODO: Add Submit button
+                    }
+                    // TODO: Add cancel button
                 }
 
                 // Notify form ready event
