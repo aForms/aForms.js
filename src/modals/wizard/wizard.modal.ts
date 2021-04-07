@@ -1,8 +1,9 @@
 import {AFormModel, AFormModelClass} from "../../a-form.model";
 import {ConditionalHelper} from "../../helpers/conditional.helper";
-import {getFormById, updateFormData} from "../../store/reducers/form-data.reducer";
+import {getFormById, resetFormData, updateFormData} from "../../store/reducers/form-data.reducer";
 import {Subscription} from "rxjs";
 import {Unsubscribe} from "@reduxjs/toolkit";
+import {doc} from "prettier";
 
 export class WizardBuilder {
 
@@ -27,6 +28,9 @@ export class WizardBuilder {
 
         const contentHolder = document.createElement('div')
         contentHolder.classList.add('ui', 'basic', 'segment')
+
+        const buttonHolder = document.createElement('div')
+        buttonHolder.classList.add('buttons')
 
         this.aFormClass.notifyFormEvents.asObservable().subscribe(value => {
             if ( value.eventName === "ready") {
@@ -56,16 +60,72 @@ export class WizardBuilder {
                     .renderComponent(this.aFormModel.components?.[currentState?.currentPage as number] as AFormModel, contentHolder)
 
                 if (this.aFormModel.components?.length) {
-                    if (this.pageIndex >= 0 && this.pageIndex < (this.aFormModel.components?.length - 1)) {
-                        // TODO: Add next button
+                    $(buttonHolder).empty()
+                    if (this.aFormClass?.libraryConfig?.wizardConfiguration?.cancelButton) {
+                        const buttonDiv = document.createElement('div')
+                        buttonDiv.classList.add('ui', 'button')
+                        buttonDiv.innerText = 'Cancel'
+                        buttonDiv.tabIndex = 0;
+                        buttonDiv.onclick = () => {
+                            this.aFormClass.store.dispatch(resetFormData({id: this.aFormClass.uniqFormId}))
+                        }
+                        buttonHolder.append(buttonDiv)
                     }
-                    if (this.pageIndex >= 1 && this.pageIndex <= (this.aFormModel.components?.length - 1)) {
-                        // TODO: Add previous button
+
+                    // if (this.aFormClass?.libraryConfig?.wizardConfiguration?.saveDraftButton) {
+                    //     const saveButtonDiv = document.createElement('div')
+                    //     saveButtonDiv.classList.add('ui', 'button')
+                    //     saveButtonDiv.innerText = 'Save as Draft'
+                    //     saveButtonDiv.tabIndex = 0;
+                    //     buttonHolder.append(saveButtonDiv)
+                    // }
+
+                    if (this.aFormClass?.libraryConfig?.wizardConfiguration?.validateButton) {
+                        const validateButtonDiv = document.createElement('div')
+                        validateButtonDiv.classList.add('ui', 'button')
+                        validateButtonDiv.innerText = 'Validate'
+                        validateButtonDiv.tabIndex = 0;
+                        validateButtonDiv.onclick = () => {
+                            this.aFormClass.formManager.form('validate form')
+                        }
+                        buttonHolder.append(validateButtonDiv)
                     }
-                    if (this.pageIndex === (this.aFormModel.components?.length - 1)) {
-                        // TODO: Add Submit button
+
+                    if (this.pageIndex >= 1 &&
+                        this.pageIndex <= (this.aFormModel.components?.length - 1) &&
+                        this.aFormClass?.libraryConfig?.wizardConfiguration?.previousButton ) {
+                        const buttonDiv = document.createElement('div')
+                        buttonDiv.classList.add('ui', 'button')
+                        buttonDiv.innerText = 'Previous'
+                        buttonDiv.onclick = () => {
+                            this.aFormClass.store
+                                .dispatch(updateFormData({id: this.aFormClass.uniqFormId,
+                                    currentPage: this.pageIndex as number >= 1 ? this.pageIndex as number - 1 : 0}))
+                        }
+                        buttonDiv.tabIndex = 0;
+                        buttonHolder.append(buttonDiv)
                     }
-                    // TODO: Add cancel button
+                    if (this.pageIndex >= 0 && this.pageIndex < (this.aFormModel.components?.length - 1) &&
+                        this.aFormClass?.libraryConfig?.wizardConfiguration?.nextButton ) {
+                        const buttonDiv = document.createElement('div')
+                        buttonDiv.classList.add('ui', 'button')
+                        buttonDiv.innerText = 'Next'
+                        buttonDiv.onclick = () => {
+                            this.aFormClass.store
+                                .dispatch(updateFormData({id: this.aFormClass.uniqFormId,
+                                    currentPage: this.pageIndex as number >= 0 ? this.pageIndex as number + 1 : 0}))
+                        }
+                        buttonDiv.tabIndex = 0;
+                        buttonHolder.append(buttonDiv)
+                    }
+                    if (this.pageIndex === (this.aFormModel.components?.length - 1) &&
+                        this.aFormClass?.libraryConfig?.wizardConfiguration?.submitButton ) {
+                        const buttonDiv = document.createElement('div')
+                        buttonDiv.classList.add('ui', 'button', 'primary')
+                        buttonDiv.innerText = 'Submit'
+                        buttonDiv.tabIndex = 0;
+                        buttonHolder.append(buttonDiv)
+                    }
                 }
 
                 // Notify form ready event
@@ -106,6 +166,7 @@ export class WizardBuilder {
         })
         this.wrapper.append(breadcrumb)
         this.wrapper.append(contentHolder)
+        this.wrapper.append(buttonHolder)
         return this.wrapper
     }
 

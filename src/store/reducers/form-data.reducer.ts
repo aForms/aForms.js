@@ -1,5 +1,4 @@
 import {createEntityAdapter, createSlice, EntityState, PayloadAction} from "@reduxjs/toolkit";
-import undoable from 'redux-undo';
 
 export interface FormData {
     id: string,
@@ -16,11 +15,14 @@ export const formDataSlice = createSlice({
         insertFormData: formDataAdapter.addOne,
         updateFormData: (state, payload: PayloadAction<FormData>) => {
             formDataAdapter.upsertOne(state, {...getFormById(state, payload.payload.id), ...payload.payload})
+        },
+        resetFormData: (state, payload: PayloadAction<FormData>) => {
+            formDataAdapter.upsertOne(state, {id: payload.payload.id, data: {}, currentPage: 0})
         }
     }
 })
 
-export const {insertFormData, updateFormData} = formDataSlice.actions
+export const {insertFormData, updateFormData, resetFormData} = formDataSlice.actions
 
 export const getFormById = (state: EntityState<FormData>, id: string) => {
     return formDataAdapter.getSelectors().selectById(state, id)

@@ -140,6 +140,19 @@ export interface FormEvents {
 
 export interface LibraryConfig {
     primaryColor?: string;
+    secondaryColor?: string;
+    errorColor?: string;
+    warningColor?: string;
+    wizardConfiguration?: WizardConfig;
+}
+
+export interface WizardConfig {
+    previousButton?: boolean;
+    nextButton?: boolean;
+    cancelButton?: boolean;
+    validateButton?: boolean;
+    saveDraftButton?: boolean;
+    submitButton?: boolean;
 }
 
 /**
@@ -173,11 +186,27 @@ export class AFormModelClass {
 
     store: EnhancedStore;
 
-    constructor(private aForm?: AFormModel, private divElement?: HTMLDivElement, uniqFormId?: string, libConfig?: LibraryConfig) {
+    libraryConfig: LibraryConfig = {
+        wizardConfiguration: {
+            cancelButton: true,
+            nextButton: true,
+            previousButton: true,
+            saveDraftButton: true,
+            submitButton: true,
+            validateButton: true
+        }
+    }
+
+    constructor(private aForm?: AFormModel, private divElement?: HTMLDivElement, uniqFormId?: string, private libConfig?: LibraryConfig) {
 
         if (uniqFormId) {
             this.uniqFormId = uniqFormId
         }
+
+        if (libConfig) {
+            this.libraryConfig = { ...this.libraryConfig, ...libConfig}
+        }
+
         this.store = new ConfigureStore(this).configureStore()
 
         this.store.dispatch(configAdded({
@@ -393,6 +422,21 @@ export class AFormModelClass {
                 form.form('set values', values);
             }
         }
+    }
+
+    insertStoreData(values?: any) {
+        // An async dispatch to trigger initial page load.
+        const asyncDispatch = (dispatch: (arg0: { payload: FormData; type: string; }) => void, getState: () => any) => {
+            dispatch(updateFormData({id: this.uniqFormId, data: values}))
+        }
+        // @ts-ignore
+        this.store.dispatch(asyncDispatch)
+        const currentState = getFormById(this.store.getState().formData, this.uniqFormId )
+        this.formManager.form('set values', currentState?.data);
+    }
+
+    getStoreData() {
+        return getFormById(this.store.getState().formData, this.uniqFormId)?.data
     }
 
     resetField(label: string) {
