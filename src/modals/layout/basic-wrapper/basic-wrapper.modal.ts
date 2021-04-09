@@ -22,7 +22,9 @@ export class BasicWrapperBuilder {
      */
     addInternalComponents(container: HTMLDivElement) {
         this.aFormModel?.components?.forEach(value => {
-            this.aFormModalClass.renderer.renderComponent(value, container)
+            if (value.hidden !== true) {
+                this.aFormModalClass.renderer.renderComponent(value, container)
+            }
         })
     }
 

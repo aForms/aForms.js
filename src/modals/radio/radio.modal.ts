@@ -4,7 +4,6 @@ import {ClassesHelper} from "../../helpers/classes.helper";
 
 // @ts-ignore
 import { v4 as uuidV4 } from 'uuid';
-import {FunctionsHelpers} from "../../helpers/functions.helpers";
 import {getFormById} from "../../store/reducers/form-data.reducer";
 import {ConditionalHelper} from "../../helpers/conditional.helper";
 
@@ -61,13 +60,14 @@ export class RadioBuilder {
         const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
         const uuid = uuidV4();
         this.wrapper = document.createElement('div');
-
+        this.wrapper.tabIndex = -1
         if (options) {
             this.options = options
         }
         this.wrapper.classList.add('grouped', 'fields');
         this.wrapper.setAttribute('role', 'radiogroup')
         this.wrapper.setAttribute('aria-labelledby', uuid)
+        this.aFormClass.validationHelper.addFocusEvent(this.wrapper)
         if (this.radioModal?.customClass) {
             new ClassesHelper().addClasses(this.radioModal?.customClass, this.wrapper)
         }
@@ -80,11 +80,11 @@ export class RadioBuilder {
                 label.setAttribute('for', this.radioModal.key)
                 label.setAttribute('id', uuid);
                 label.innerText = this.radioModal?.label as string
-                if (this.radioModal.tooltip) {
-                    const toolTip = this.aFormClass.validationHelper.createToolTip(this.radioModal, this.wrapper)
-                    label.append(toolTip)
-                }
                 this.wrapper.append(label)
+            }
+            if (this.radioModal.tooltip) {
+                const toolTip = this.aFormClass.validationHelper.createToolTip(this.radioModal, this.wrapper)
+                this.wrapper.append(toolTip)
             }
             this.addRadioFields();
             $(this.wrapper)
@@ -136,6 +136,9 @@ export class RadioBuilder {
 
     addValidation() {
         const validation = this.aFormClass.validationHelper.prepareValidation(this.radioModal)
+        if (this.radioModal.validate?.required) {
+            this.wrapper?.classList.add('required');
+        }
         this.aFormClass.formManager.form('add rule', this.radioModal.key, { on: 'blur', rules: validation })
     }
 

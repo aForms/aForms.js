@@ -29,30 +29,26 @@ export class FunctionsHelpers {
     }
 
     createToolTip(aFormModel: AFormModel, wrapper: HTMLDivElement|HTMLFieldSetElement) {
-        const tooltipId = uuidV4()
+        const tooltipWrapperDiv = document.createElement('span')
+        tooltipWrapperDiv.style.marginLeft = '5px'
+        // tooltipWrapperDiv.setAttribute('role', 'tooltip')
+        this.aFormClass.validationHelper.addFocusEvent(tooltipWrapperDiv)
         const infoIcon = document.createElement('i')
         infoIcon.classList.add('info', 'icon', 'circle', 'data-tooltip')
-        infoIcon.tabIndex = 0
-        this.aFormClass.validationHelper.addFocusEvent(infoIcon)
+        infoIcon.tabIndex = -1
         // Custom tooltip
         const tooltipDiv = document.createElement('div')
         tooltipDiv.classList.add('ui', 'custom', 'popup', 'hidden')
         tooltipDiv.innerText = aFormModel?.tooltip as string ?? 'No content'
-        tooltipDiv.setAttribute('for', tooltipId)
-        tooltipDiv.setAttribute('aria-hidden', 'true')
-        tooltipDiv.setAttribute('aria-live', 'polite')
-        tooltipDiv.setAttribute('role', 'tooltip')
-        const tooltipWrapperDiv = document.createElement('span')
-        tooltipWrapperDiv.style.marginLeft = '5px'
-        tooltipWrapperDiv.setAttribute('id', tooltipId)
         tooltipWrapperDiv.append(infoIcon)
         tooltipWrapperDiv.append(tooltipDiv)
+        tooltipWrapperDiv.tabIndex = 0
         this.initializeTooltip(wrapper, tooltipWrapperDiv)
         return tooltipWrapperDiv
     }
 
     initializeTooltip(wrapper: HTMLDivElement|HTMLFieldSetElement, tooltipSpan: HTMLDivElement|HTMLSpanElement) {
-        wrapper.setAttribute('aria-describedby', tooltipSpan?.getAttribute('id') as string)
+        // wrapper.setAttribute('aria-describedby', tooltipSpan?.getAttribute('id') as string)
         $(tooltipSpan)
             .popup({
                 popup: $(tooltipSpan).find('.ui.custom'),
@@ -62,12 +58,10 @@ export class FunctionsHelpers {
                 $(wrapper)
                     .find('.data-tooltip')
                     .popup('show')
-                $(tooltipSpan).find('.ui.custom').attr('aria-hidden', 'false')
             })
             .on('focusout', () => {
                 $(wrapper)
                     .find('.data-tooltip').popup('hide')
-                $(tooltipSpan).find('.ui.custom').attr('aria-hidden', 'true')
             })
             .on('click', () => {
                 $(wrapper)
@@ -117,31 +111,29 @@ export class FunctionsHelpers {
     }
 
     addValidationWithCustomMessage(aFormModel: AFormModel, validation: string, prompt?: string, conditional?: any) {
-        if (aFormModel.customError) {
+        if (validation.includes('checkValidation')) {
             return {
                 type: validation,
-                prompt: prompt ? prompt : aFormModel.customError
-            }
-        } else {
-            if (validation.includes('checkValidation')) {
-                return {
-                    type: validation,
-                    prompt: (value: any) => {
-                        const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
-                        const validation = new ConditionalHelper().checkCondition(conditional, data)
-                        return `${validation}`
+                prompt: (value: any) => {
+                    const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
+                    const validation = new ConditionalHelper().checkCondition(conditional, data)
+                    if (aFormModel.customError) {
+                        return aFormModel.customError
                     }
+                    return `${validation}`
                 }
             }
-            if (aFormModel.type === "radio") {
-                return {
-                    type: validation,
-                    prompt: 'select a value.'
-                }
-            }
+        }
+        if (aFormModel.type === "radio") {
             return {
-                type: validation
+                type: validation,
+                prompt: () => {
+                    return  'select a value'
+                }
             }
+        }
+        return {
+            type: validation
         }
     }
 

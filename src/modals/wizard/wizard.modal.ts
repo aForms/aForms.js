@@ -3,7 +3,6 @@ import {ConditionalHelper} from "../../helpers/conditional.helper";
 import {getFormById, resetFormData, updateFormData} from "../../store/reducers/form-data.reducer";
 import {Subscription} from "rxjs";
 import {Unsubscribe} from "@reduxjs/toolkit";
-import {doc} from "prettier";
 
 export class WizardBuilder {
 
@@ -132,8 +131,13 @@ export class WizardBuilder {
                 this.aFormClass.formManager = $('#' + this.aFormClass.uniqFormId).form({
                     on: 'blur',
                     inline : true,
-                    debug: true,
-                    preventLeaving: true
+                    debug: false,
+                    preventLeaving: true,
+                    autoCheckRequired: true,
+                    onFailure: (formErrors: any, fields: any) => {
+                        console.log(formErrors)
+                        console.log(fields)
+                    }
                 })
 
                 // Notify form ready event

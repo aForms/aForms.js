@@ -184,6 +184,10 @@ export class AFormModelClass {
 
     formManager: any;
 
+    formLiveRegion: HTMLDivElement = document.createElement('div')
+
+    formLiveAlertRegion: HTMLDivElement = document.createElement('div')
+
     store: EnhancedStore;
 
     libraryConfig: LibraryConfig = {
@@ -334,6 +338,7 @@ export class AFormModelClass {
                 const form = document.createElement('form');
                 form.classList.add('ui', 'form', 'segment');
                 form.setAttribute('id', this.uniqFormId)
+                form.setAttribute('role', 'form')
                 this.formElement = form;
                 const divContainer: HTMLDivElement = document.createElement('div');
                 divContainer.classList.add('a-form-wizard-holder');
@@ -349,7 +354,26 @@ export class AFormModelClass {
                 const errorBlock = document.createElement('div')
                 errorBlock.classList.add('ui', 'error', 'message')
                 form.append(errorBlock)
+                this.formLiveRegion.setAttribute('role', 'status')
+                this.formLiveRegion.setAttribute('aria-live', 'assertive')
+                this.formLiveRegion.classList.add('visually-hidden')
+                this.formLiveRegion.style.position = 'absolute'
+                this.formLiveRegion.style.left = '-10000px'
+                this.formLiveRegion.style.width = '1px'
+                this.formLiveRegion.style.height = '1px'
+                this.formLiveRegion.style.overflow = 'hidden'
                 this.divElement?.append(form)
+                this.divElement?.append(this.formLiveRegion)
+
+                this.formLiveAlertRegion.setAttribute('role', 'status')
+                this.formLiveAlertRegion.setAttribute('aria-live', 'assertive')
+                this.formLiveAlertRegion.classList.add('visually-hidden')
+                this.formLiveAlertRegion.style.position = 'absolute'
+                this.formLiveAlertRegion.style.left = '-10000px'
+                this.formLiveAlertRegion.style.width = '1px'
+                this.formLiveAlertRegion.style.height = '1px'
+                this.formLiveAlertRegion.style.overflow = 'hidden'
+                this.divElement?.append(this.formLiveAlertRegion)
 
                 // An async dispatch to trigger initial page load.
                 const asyncDispatch = (dispatch: (arg0: { payload: FormData; type: string; }) => void, getState: () => any) => {
@@ -444,10 +468,13 @@ export class AFormModelClass {
     }
 
     wizardNextPage() {
-        const valid = $('#my_form').form('validate form')
-        if (valid) {
+        const valid = this.formManager.form('validate form')
+        if (valid === true) {
             this.store.dispatch(updateFormData({id: this.uniqFormId, currentPage: this.formWizard?.pageIndex as number + 1}))
-
+        } else {
+            if (this.gatherErrors()?.length) {
+                this.formLiveAlertRegion.innerText = 'Error found on form, fix them to proceed.'
+            }
         }
     }
 
@@ -458,15 +485,23 @@ export class AFormModelClass {
     }
 
     saveWizard() {
-        const valid = $('#my_form').form('validate form')
-        if (valid) {
+        const valid = this.formManager.form('validate form')
+        if (valid === true) {
             this.notifyChanges()
             return getFormById(this.store.getState().formData, this.uniqFormId )?.data
+        } else {
+            if (this.gatherErrors()?.length) {
+                this.formLiveAlertRegion.innerText = 'Error found on form, fix them to proceed.'
+            }
         }
     }
 
     notifyChanges(by?: string) {
         const currentState = getFormById(this.store.getState().formData, this.uniqFormId )
         this.store.dispatch(updateFormData({id: this.uniqFormId, data: { ...currentState?.data, ...this.getFormData()}}))
+    }
+
+    gatherErrors() {
+        return this.formElement?.querySelectorAll('div.field.error')
     }
 }

@@ -123,6 +123,10 @@ export class SelectBuilder {
     selectComponentRenderer(options?: any, update?: boolean) {
         const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
         const uuid = uuidV4();
+        // Link label to input search
+        const menuId = uuidV4()
+        const inputSearch = uuidV4()
+
         const controllerLink = uuidV4();
         // Live region to notify screen reader about changes
         const liveRegion = document.createElement('div')
@@ -141,8 +145,7 @@ export class SelectBuilder {
             }
             this.wrapper.classList.add('field');
             this.wrapper.style.padding = '5px'
-            this.wrapper.setAttribute('role', 'combobox')
-            this.wrapper.setAttribute('aria-controls', controllerLink)
+            this.wrapper.tabIndex = -1
             this.aFormClass.validationHelper.addFocusEvent(this.wrapper)
             const label = document.createElement('label')
             label.innerText = this.selectModel?.label as string
@@ -154,12 +157,6 @@ export class SelectBuilder {
             const template: string = this.selectModel?.template?.replace?.(/<span>{{ item.|}}<\/span>/g, "")?.trim() as string
             const values: any[] = Object(this.selectModel?.data)[dataSource ?? 'values'];
 
-            // Linking tooltip of exist
-            if (this.selectModel?.tooltip) {
-                const toolTip = this.aFormClass.validationHelper.createToolTip(this.selectModel, this.wrapper)
-                label.append(toolTip)
-            }
-
             const selectElement = document.createElement('select')
             selectElement.classList.add('ui', 'dropdown', 'search')
             selectElement.name = this.selectModel?.key as string
@@ -169,12 +166,22 @@ export class SelectBuilder {
             selectElement.append(placeHolderOption)
             values.forEach((value: LabelValue|any) => {
                 const option = document.createElement('option')
+                option.setAttribute('role', 'option')
+                option.setAttribute('aria-selected', 'false')
                 option.innerText = value?.[template]
                 option.setAttribute('value', value?.[valueProperty])
                 selectElement.append(option)
             })
+            if (this.selectModel.validate?.required) {
+                selectElement.setAttribute('aria-required', 'true')
+            }
             this.optionsCount = values.length
             this.wrapper?.append(label)
+            // Linking tooltip of exist
+            if (this.selectModel?.tooltip) {
+                const toolTip = this.aFormClass.validationHelper.createToolTip(this.selectModel, this.wrapper)
+                this.wrapper.append(toolTip)
+            }
             this.wrapper?.append(selectElement)
             this.wrapper?.append(liveRegion)
 
@@ -187,71 +194,60 @@ export class SelectBuilder {
                 clearable: true,
                 selectOnKeydown: false,
                 allowTab: true,
-                onShow: () => {
-                    this.wrapper?.querySelector('input')?.setAttribute('aria-expanded', 'true')
-                    const currentSelection = $(this.wrapper as HTMLElement).find('.menu>.selected')
-                    liveRegion.innerText = "entering  " + this.selectModel.label + " drop down options."
-                    if (this.selectModel.multiple) {
-                        liveRegion.innerText = `You are on multiselect field and you have ${this.optionsCount} to choose from.
-                            Enter the text for autocompletion or up and down arrow for selection. ${currentSelection?.text() ? 'Currently selected ' + currentSelection?.text() : ''}`
-                    } else {
-                        liveRegion.innerText = `You are on select field and you have ${this.optionsCount} to choose from.
-                            Enter the text for autocompletion or up and down arrow for selection. ${currentSelection?.text()  ? 'Currently selected ' + currentSelection?.text()  : ''}`
-                    }
-                    setTimeout(() => {
-                        this.notifiedDropbox = true
-                    }, 1000)
-                },
-                onHide: () => {
-                    this.wrapper?.querySelector('input')?.setAttribute('aria-expanded', 'false')
-                    this.notifiedDropbox = false
-                },
                 onChange: (v: string, label: string) => {
                     if (!this.internalChanges) {
                         this.aFormClass.notifyChanges(this.selectModel?.key as string)
-                        liveRegion.innerText = "selected, " + label
+                        this.aFormClass.formLiveRegion.innerText = "Selected, " + label
                     }
                 },
-                showOnFocus: true,
+                onRemove: (v: string, label: string) => {
+                  console.log(v , label)
+                },
+                showOnFocus: false,
                 onNoResults: () => {
                     liveRegion.innerText = "No result found, please try narrowing your search."
                 }
             })
 
+            const choices = $(this.wrapper).find('.menu')?.children()?.not('.filtered')
 
-            fromEvent($(this.wrapper).find('input.search'), 'input')
+
+            fromEvent($(this.wrapper).find('input.search'), 'keydown')
                 .pipe(debounceTime(1000)).subscribe(value => {
                 if (this.wrapper) {
-                    const choices = $(this.wrapper).find('.menu')?.children()?.not('.filtered')
-                    const currentSelection = $(this.wrapper).find('.menu>.selected')
-                    liveRegion.innerText = "You have " + choices?.length + " options available. Currently selected " + currentSelection.text()
+                    const selection = $(this.wrapper).find('.menu')?.find('.selected')
+                    liveRegion.innerText = `${selection?.text()}`
                 }
             })
 
-            // Link label to input search
+
             $(this.wrapper).find('input.search')
+                .attr('aria-haspopup', 'listbox')
                 .attr('aria-labelledby', uuid)
-                .attr('role', 'listbox')
-                .attr('autocomplete', 'true')
-                .attr('aria-multiselectable', this.selectModel.multiple ? 'true' : 'false')
-
-            this.aFormClass.validationHelper.listenFormMutations.asObservable().subscribe((value) => {
-                value.forEach((record, index, array) => {
-                    if (record.attributeName === 'class' && this.notifiedDropbox) {
-                        if (((record.target as HTMLElement).classList?.contains('selected')
-                            && !(record.target as HTMLElement).classList?.contains('active'))) {
-                            liveRegion.innerText = (record.target as HTMLElement).dataset?.text as string
-                        } else if (((record.target as HTMLElement).classList?.contains('selected')
-                            && (record.target as HTMLElement).classList?.contains('active'))) {
-                            liveRegion.innerText = 'Currently selected option ' + (record.target as HTMLElement).dataset?.text as string
+                .attr('aria-owns', menuId)
+                .attr('aria-autocomplete', 'both')
+                .attr('aria-controls', 'list')
+                .attr('id', inputSearch)
+                .on('focusout', () => {
+                    this.aFormClass.formManager.form('is valid', this.selectModel.key, true)
+                    setTimeout(() => {
+                        if (this.wrapper?.classList.contains('error')) {
+                            liveRegion.setAttribute('aria-live', 'alert')
+                            liveRegion.innerText = '' + this.wrapper?.querySelector('.ui.red.prompt')?.textContent || ''
+                        } else {
+                            liveRegion.setAttribute('aria-live', 'polite')
                         }
-                    }
+                    }, 1000)
                 })
-            })
+            $(this.wrapper).find('div.menu')
+                .attr('id', menuId)
 
-            $(this.wrapper).find('.menu')?.children()?.each((index, element ) => {
-                this.aFormClass.validationHelper.addMutationOn(element)
-            })
+            if (this.selectModel.multiple) {
+                $(this.wrapper).find('div.ui.dropdown')
+                    .on('click', () => {
+                        $(this.wrapper as HTMLDivElement)?.find('.dropdown').dropdown('show')
+                    })
+            }
 
             this.isVisible = this.aFormClass.conditionalHelper.checkCondition(this.selectModel?.conditional?.json, data)
             if (!this.isVisible) {
@@ -269,10 +265,13 @@ export class SelectBuilder {
 
     addValidation() {
         const validation = this.aFormClass.validationHelper.prepareValidation(this.selectModel)
+        if (this.selectModel.validate?.required) {
+            this.wrapper?.classList.add('required');
+        }
         this.aFormClass.formManager.form('add rule', this.selectModel.key, { on: 'blur', rules: validation })
     }
 
     removeValidation() {
-        $('#' + this.aFormClass.uniqFormId).form('remove field', this.selectModel.key)
+        this.aFormClass.formManager.form('remove field', this.selectModel.key)
     }
 }
