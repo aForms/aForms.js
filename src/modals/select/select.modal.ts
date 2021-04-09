@@ -200,8 +200,16 @@ export class SelectBuilder {
                         this.aFormClass.formLiveRegion.innerText = "Selected, " + label
                     }
                 },
-                onRemove: (v: string, label: string) => {
-                  console.log(v , label)
+                onHide: () => {
+                    this.aFormClass.formManager.form('is valid', this.selectModel.key, true)
+                    setTimeout(() => {
+                        if (this.wrapper?.classList.contains('error')) {
+                            liveRegion.setAttribute('aria-live', 'alert')
+                            liveRegion.innerText = '' + this.wrapper?.querySelector('.ui.red.prompt')?.textContent || ''
+                        } else {
+                            liveRegion.setAttribute('aria-live', 'polite')
+                        }
+                    }, 1000)
                 },
                 showOnFocus: false,
                 onNoResults: () => {
@@ -209,7 +217,7 @@ export class SelectBuilder {
                 }
             })
 
-            const choices = $(this.wrapper).find('.menu')?.children()?.not('.filtered')
+            // const choices = $(this.wrapper).find('.menu')?.children()?.not('.filtered')
 
 
             fromEvent($(this.wrapper).find('input.search'), 'keydown')
@@ -228,17 +236,6 @@ export class SelectBuilder {
                 .attr('aria-autocomplete', 'both')
                 .attr('aria-controls', 'list')
                 .attr('id', inputSearch)
-                .on('focusout', () => {
-                    this.aFormClass.formManager.form('is valid', this.selectModel.key, true)
-                    setTimeout(() => {
-                        if (this.wrapper?.classList.contains('error')) {
-                            liveRegion.setAttribute('aria-live', 'alert')
-                            liveRegion.innerText = '' + this.wrapper?.querySelector('.ui.red.prompt')?.textContent || ''
-                        } else {
-                            liveRegion.setAttribute('aria-live', 'polite')
-                        }
-                    }, 1000)
-                })
             $(this.wrapper).find('div.menu')
                 .attr('id', menuId)
 
