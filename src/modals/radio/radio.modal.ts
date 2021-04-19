@@ -108,6 +108,8 @@ export class RadioBuilder {
     }
 
     private addRadioFields() {
+        const wrapperDiv = document.createElement('div')
+        wrapperDiv.style.display = "block"
         this.radioModal?.values?.forEach((value: RadioValues) => {
             const uuid = uuidV4();
             const field = document.createElement('div')
@@ -122,7 +124,7 @@ export class RadioBuilder {
             const radioInput = document.createElement('input')
             radioInput.type = 'radio'
             radioInput.name = this.radioModal?.key as string
-            radioInput.value = value.value as string
+            radioInput.value = value.value as string || ""
             radioInput.setAttribute('id', uuid)
             const radioLabel = document.createElement('label')
             radioLabel.innerText = value.label as string
@@ -130,8 +132,9 @@ export class RadioBuilder {
             radioDiv.append(radioInput)
             radioDiv.append(radioLabel)
             field.append(radioDiv)
-            this.wrapper?.append(field)
+            wrapperDiv?.append(field)
         })
+        this.wrapper?.append(wrapperDiv)
     }
 
     addValidation() {

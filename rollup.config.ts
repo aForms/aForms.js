@@ -63,7 +63,6 @@ export default {
                 description: pkg.description,
                 main: "build/index.js",
                 cjs: "build/cjs/a-forms.cjs.js",
-                module: "src/index.ts",
                 type: "module",
                 types: "build/index.d.ts",
                 author: pkg.author,

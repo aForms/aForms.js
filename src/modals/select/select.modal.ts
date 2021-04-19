@@ -166,7 +166,6 @@ export class SelectBuilder {
             selectElement.append(placeHolderOption)
             values.forEach((value: LabelValue|any) => {
                 const option = document.createElement('option')
-                option.setAttribute('role', 'option')
                 option.setAttribute('aria-selected', 'false')
                 option.innerText = value?.[template]
                 option.setAttribute('value', value?.[valueProperty])

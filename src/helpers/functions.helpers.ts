@@ -31,7 +31,7 @@ export class FunctionsHelpers {
     createToolTip(aFormModel: AFormModel, wrapper: HTMLDivElement|HTMLFieldSetElement) {
         const tooltipWrapperDiv = document.createElement('span')
         tooltipWrapperDiv.style.marginLeft = '5px'
-        // tooltipWrapperDiv.setAttribute('role', 'tooltip')
+        tooltipWrapperDiv.setAttribute('role', 'tooltip')
         this.aFormClass.validationHelper.addFocusEvent(tooltipWrapperDiv)
         const infoIcon = document.createElement('i')
         infoIcon.classList.add('info', 'icon', 'circle', 'data-tooltip')

@@ -21,7 +21,7 @@ export class WizardBuilder {
         this.wrapper = document.createElement('div')
         this.wrapper.style.margin = '1rem'
 
-        const breadcrumb = document.createElement('div')
+        const breadcrumb = document.createElement('nav')
         breadcrumb.classList.add('ui', 'breadcrumb')
         breadcrumb.setAttribute('aria-label', 'Breadcrumb')
 
@@ -154,6 +154,7 @@ export class WizardBuilder {
             a.style.padding = '5px'
             a.style.color = 'var(--primary-color)'
             this.aFormClass.validationHelper.addFocusEvent(a)
+            a.setAttribute('role', 'button')
             a.tabIndex = 0
             if (index !== 0) {
                 const i = document.createElement('i')
