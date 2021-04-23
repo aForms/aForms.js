@@ -137,6 +137,9 @@ export class WizardBuilder {
                     onFailure: (formErrors: any, fields: any) => {
                         console.log(formErrors)
                         console.log(fields)
+                    },
+                    onInvalid: (v) => {
+                        console.log(v  + " test")
                     }
                 })
 

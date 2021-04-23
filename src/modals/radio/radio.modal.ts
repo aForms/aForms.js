@@ -29,7 +29,6 @@ export class RadioBuilder {
 
         const selectStoreSubscriber = this.aFormClass.store.subscribe(() => {
             const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
-            this.wrapper?.querySelector('.ui.dropdown')?.classList.add('loading')
             this.isVisible = new ConditionalHelper().checkCondition(this.radioModal?.conditional?.json, data)
             if (this.wrapper) {
                 if (this.isVisible) {
@@ -41,9 +40,6 @@ export class RadioBuilder {
                     this.removeValidation()
                 }
             }
-            setTimeout(() => {
-                this.wrapper?.querySelector('.dropdown')?.classList.remove('loading')
-            }, 200)
         })
 
         this.aFormClass.removableSubscribers.push(this.aFormClass.notifyFormEvents.asObservable().subscribe(value => {
@@ -60,11 +56,11 @@ export class RadioBuilder {
         const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
         const uuid = uuidV4();
         this.wrapper = document.createElement('div');
-        this.wrapper.tabIndex = -1
+        // this.wrapper.tabIndex = -1
         if (options) {
             this.options = options
         }
-        this.wrapper.classList.add('grouped', 'fields');
+        this.wrapper.classList.add('grouped', 'fields', 'field');
         this.wrapper.setAttribute('role', 'radiogroup')
         this.wrapper.setAttribute('aria-labelledby', uuid)
         this.aFormClass.validationHelper.addFocusEvent(this.wrapper)
@@ -112,10 +108,6 @@ export class RadioBuilder {
         wrapperDiv.style.display = "block"
         this.radioModal?.values?.forEach((value: RadioValues) => {
             const uuid = uuidV4();
-            const field = document.createElement('div')
-            field.classList.add('field')
-            field.setAttribute('role', 'radio')
-            field.style.margin = "unset"
             const radioDiv = document.createElement('div')
             radioDiv.classList.add('ui', 'radio', 'checkbox')
             radioDiv.style.padding = "5px"
@@ -131,9 +123,11 @@ export class RadioBuilder {
             radioLabel.setAttribute('for', uuid)
             radioDiv.append(radioInput)
             radioDiv.append(radioLabel)
-            field.append(radioDiv)
-            wrapperDiv?.append(field)
+            wrapperDiv?.append(radioDiv)
         })
+        // this.wrapper?.addEventListener('onInvalid', (e) => {
+        //     console.log("THers an error  ", e)
+        // })
         this.wrapper?.append(wrapperDiv)
     }
 
