@@ -134,13 +134,7 @@ export class WizardBuilder {
                     debug: false,
                     preventLeaving: true,
                     autoCheckRequired: true,
-                    onFailure: (formErrors: any, fields: any) => {
-                        console.log(formErrors)
-                        console.log(fields)
-                    },
-                    onInvalid: (v) => {
-                        console.log(v  + " test")
-                    }
+                    prompt: this.aFormClass.errorPrompts
                 })
 
                 // Notify form ready event

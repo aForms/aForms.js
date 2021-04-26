@@ -20,6 +20,7 @@ import {ConfigureStore} from "./store";
 import {configAdded, formConfig} from "./store/reducers/form-config.reducer";
 import {FormData, getFormById, insertFormData, updateFormData} from "./store/reducers/form-data.reducer";
 import {EnhancedStore, Unsubscribe} from "@reduxjs/toolkit";
+import { ErrorPrompt } from "./config/prompt.model";
 
 declare var $: JQueryStatic;
 
@@ -130,7 +131,7 @@ export interface Conditional {
 
 
 export interface FormEvents {
-    eventName: 'initializing' | 'initialized' | 'rendered' | 'errors' | 'valid' | 'change'|'ready',
+    eventName: 'initializing' | 'initialized' | 'rendered' | 'errors' | 'valid' | 'change'| 'ready',
     details?: {
         eventInfo?: Event,
         key?: string,
@@ -189,6 +190,8 @@ export class AFormModelClass {
     formLiveAlertRegion: HTMLDivElement = document.createElement('div')
 
     store: EnhancedStore;
+
+    errorPrompts: ErrorPrompt = {};
 
     libraryConfig: LibraryConfig = {
         wizardConfiguration: {

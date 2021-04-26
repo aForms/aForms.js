@@ -67,9 +67,6 @@ export class RadioBuilder {
         if (this.radioModal?.customClass) {
             new ClassesHelper().addClasses(this.radioModal?.customClass, this.wrapper)
         }
-        if (this.radioModal?.inline) {
-            this.wrapper.classList.add('inline');
-        }
         if (this.radioModal.key) {
             if (this.radioModal?.label) {
                 const label = document.createElement('label')
@@ -125,9 +122,9 @@ export class RadioBuilder {
             radioDiv.append(radioLabel)
             wrapperDiv?.append(radioDiv)
         })
-        // this.wrapper?.addEventListener('onInvalid', (e) => {
-        //     console.log("THers an error  ", e)
-        // })
+        if (this.radioModal?.inline) {
+            wrapperDiv.classList.add('inline');
+        }
         this.wrapper?.append(wrapperDiv)
     }
 

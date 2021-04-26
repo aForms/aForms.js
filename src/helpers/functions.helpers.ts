@@ -124,14 +124,6 @@ export class FunctionsHelpers {
                 }
             }
         }
-        if (aFormModel.type === "radio") {
-            return {
-                type: validation,
-                prompt: () => {
-                    return  'select a value'
-                }
-            }
-        }
         return {
             type: validation
         }
