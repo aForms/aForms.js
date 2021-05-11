@@ -507,4 +507,8 @@ export class AFormModelClass {
     gatherErrors() {
         return this.formElement?.querySelectorAll('div.field.error')
     }
+
+    validateForm() {
+        return this.formManager.form('validate form')
+    }
 }
