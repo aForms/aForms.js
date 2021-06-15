@@ -36,6 +36,10 @@ export class RadioBuilder {
                     this.addValidation()
                     this.aFormClass.validationHelper.calculatedValue(this.radioModal)
                 } else {
+                    // Clear on hide to ensure value gets cleared when hidden
+                    if (this.radioModal.clearOnHide) {
+                        this.aFormClass.resetField(this.radioModal.key  as string)
+                    }
                     $(this.wrapper).fadeOut()
                     this.removeValidation()
                 }
@@ -92,6 +96,10 @@ export class RadioBuilder {
 
         this.isVisible = this.aFormClass.conditionalHelper.checkCondition(this.radioModal?.conditional?.json, data)
         if (!this.isVisible) {
+            // Clear on hide to ensure value gets cleared when hidden
+            if (this.radioModal.clearOnHide) {
+                this.aFormClass.resetField(this.radioModal.key  as string)
+            }
             $(this.wrapper).hide()
         } else {
             this.aFormClass.validationHelper.calculatedValue(this.radioModal)
@@ -132,6 +140,7 @@ export class RadioBuilder {
         const validation = this.aFormClass.validationHelper.prepareValidation(this.radioModal)
         if (this.radioModal.validate?.required) {
             this.wrapper?.classList.add('required');
+            this.wrapper?.setAttribute('aria-required', 'true')
         }
         this.aFormClass.formManager.form('add rule', this.radioModal.key, { on: 'blur', rules: validation })
     }

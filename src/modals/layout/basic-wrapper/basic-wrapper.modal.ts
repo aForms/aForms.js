@@ -9,7 +9,7 @@ export class BasicWrapperBuilder {
 
     createPanel(): HTMLDivElement {
         const segment = document.createElement('div')
-        segment.classList.add('a-form-content-holder')
+        segment.classList.add('a-form-content-holder', 'a-form-common-wrapper')
         segment.tabIndex = this.aFormModel?.tabindex ? Number(this.aFormModel?.tabindex) : -1
         this.addInternalComponents(segment)
         const container = document.createElement('div')

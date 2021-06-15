@@ -14,7 +14,6 @@ import { RadioModal } from "./modals/radio/radio.modal";
 import {FunctionsHelpers} from "./helpers/functions.helpers";
 import {WizardBuilder} from "./modals/wizard/wizard.modal";
 import {ConditionalHelper} from "./helpers/conditional.helper";
-// @ts-ignore
 import { v4 as uuidV4 } from 'uuid';
 import {ConfigureStore} from "./store";
 import {configAdded, formConfig} from "./store/reducers/form-config.reducer";
@@ -26,106 +25,106 @@ declare var $: JQueryStatic;
 
 export interface AFormModel extends ProjectModel, TextfieldModal, TextareaModal, ButtonModal,
     PanelModal, ColumnsModal, SignatureModal, SurveyModal, ContentModal, BasicWrapperModal, SelectModal, RadioModal {
-    display?: "form" | "wizard",
-    settings?: any,
-    components?: AFormModel[],
+    display?: "form" | "wizard"
+    settings?: any
+    components?: AFormModel[]
     type?: "textfield" | "button" | "textarea" | "panel" | "form" | "content" | "signature" | "columns" | "survey" | "phoneNumber" | "email" | "select" | "radio" | "wizard",
-    inputType?: "phoneNumber" | "email" | "text" | "radio",
-    key?: string,
-    tableView?: boolean,
-    hideLabel?: boolean,
-    hidden?: boolean,
-    label?: string,
-    modalEdit?: boolean,
-    disabled?: boolean,
-    autofocus?: boolean,
-    tabindex?: number | string,
-    customClass?: string | string[],
-    autocomplete?: "on" | "off",
-    prefix?: string,
-    suffix?: string,
-    tooltip?: string,
-    description?: string,
-    placeholder?: string,
-    clearOnHide?: boolean,
-    labelPosition?: "left-left" | "left-right" | "right-left" | "right-right" | "bottom" | "top",
-    customDefaultValue?: string | any,
-    calculateValue?: string | any,
-    encrypted?: boolean,
-    redrawOn?: "data" | "textArea" | "submit" | "",
-    validate?: Validation,
-    validateOn?: string,
-    unique?: boolean,
-    errorLabel?: string,
-    properties?: any,
-    conditional?: Conditional,
-    customConditional?: string,
-    attributes?: any,
-    tags?: string[],
-    defaultValue?: string | any,
-    kickbox?: any,
-    theme?: "info" | "primary" | "secondary" | "success" | "danger" | "warning" | "default",
-    allowMultipleMasks?: boolean,
-    dbIndex?: boolean,
-    indexeddb?: any,
-    inline?: boolean,
-    customError?: string,
-    id?: string,
-    breadcrumbClickable?: boolean,
-    authenticate?: boolean,
-    allowCalculateOverride?: boolean,
-    clearOnRefresh?: boolean,
-    isNew?: boolean,
-    tree?: boolean,
-    fieldSet?: boolean,
-    breadcrumb?: string,
-    reference?: boolean,
-    form?: string,
-    allowPrevious?: boolean,
-    revisions?: string,
-    _vid?: number,
-    controller?: string,
-    idPath?: string,
-    useExactSearch?: boolean,
-    dataGridLabel?: boolean,
+    inputType?: "phoneNumber" | "email" | "text" | "radio"
+    key?: string
+    tableView?: boolean
+    hideLabel?: boolean
+    hidden?: boolean
+    label?: string
+    modalEdit?: boolean
+    disabled?: boolean
+    autofocus?: boolean
+    tabindex?: number | string
+    customClass?: string | string[]
+    autocomplete?: "on" | "off"
+    prefix?: string
+    suffix?: string
+    tooltip?: string
+    description?: string
+    placeholder?: string
+    clearOnHide?: boolean
+    labelPosition?: "left-left" | "left-right" | "right-left" | "right-right" | "bottom" | "top"
+    customDefaultValue?: string | any
+    calculateValue?: string | any
+    encrypted?: boolean
+    redrawOn?: "data" | "textArea" | "submit" | ""
+    validate?: Validation
+    validateOn?: string
+    unique?: boolean
+    errorLabel?: string
+    properties?: any
+    conditional?: Conditional
+    customConditional?: string
+    attributes?: any
+    tags?: string[]
+    defaultValue?: string | any
+    kickbox?: any
+    theme?: "info" | "primary" | "secondary" | "success" | "danger" | "warning" | "default"
+    allowMultipleMasks?: boolean
+    dbIndex?: boolean
+    indexeddb?: any
+    inline?: boolean
+    customError?: string
+    id?: string
+    breadcrumbClickable?: boolean
+    authenticate?: boolean
+    allowCalculateOverride?: boolean
+    clearOnRefresh?: boolean
+    isNew?: boolean
+    tree?: boolean
+    fieldSet?: boolean
+    breadcrumb?: string
+    reference?: boolean
+    form?: string
+    allowPrevious?: boolean
+    revisions?: string
+    _vid?: number
+    controller?: string
+    idPath?: string
+    useExactSearch?: boolean
+    dataGridLabel?: boolean
     src?: string
 }
 
 export interface ProjectModel {
-    _id?: string,
-    machineName?: string,
-    modified?: string,
-    title?: string,
-    name?: string,
-    path?: string,
-    project?: string,
-    created?: string,
-    owner?: string,
-    submissionAccess?: any,
+    _id?: string
+    machineName?: string
+    modified?: string
+    title?: string
+    name?: string
+    path?: string
+    project?: string
+    created?: string
+    owner?: string
+    submissionAccess?: any
     access?: any
 }
 
 export interface Validation {
-    required?: boolean,
-    pattern?: string,
-    customMessage?: string,
-    json?: any,
-    custom?: string,
-    minLength?: number | string,
-    maxLength?: number | string,
-    minWords?: number | string,
-    maxWords?: number | string,
-    customPrivate?: boolean,
-    strictDateValidation?: boolean | "",
-    select?: boolean,
-    multiple?: boolean,
+    required?: boolean
+    pattern?: string
+    customMessage?: string
+    json?: any
+    custom?: string
+    minLength?: number | string
+    maxLength?: number | string
+    minWords?: number | string
+    maxWords?: number | string
+    customPrivate?: boolean
+    strictDateValidation?: boolean | ""
+    select?: boolean
+    multiple?: boolean
     unique?: boolean
 }
 
 export interface Conditional {
-    show?: boolean | string,
-    when?: string | null,
-    eq?: string | number,
+    show?: boolean | string
+    when?: string | null
+    eq?: string | number
     json?: any
 }
 
@@ -139,21 +138,35 @@ export interface FormEvents {
     }
 }
 
+export enum Mode {
+    VIEW,
+    EDIT
+}
+
+export interface ProxyUrl {
+    from: string
+    to: string
+}
+
 export interface LibraryConfig {
-    primaryColor?: string;
-    secondaryColor?: string;
-    errorColor?: string;
-    warningColor?: string;
-    wizardConfiguration?: WizardConfig;
+    primaryColor?: string
+    secondaryColor?: string
+    errorColor?: string
+    warningColor?: string
+    wizardConfiguration?: WizardConfig
+    proxyUrl?: ProxyUrl
+    debug?: boolean
+    pageUnloadEvent?: boolean
+    viewOnly?: Mode
 }
 
 export interface WizardConfig {
-    previousButton?: boolean;
-    nextButton?: boolean;
-    cancelButton?: boolean;
-    validateButton?: boolean;
-    saveDraftButton?: boolean;
-    submitButton?: boolean;
+    previousButton?: boolean
+    nextButton?: boolean
+    cancelButton?: boolean
+    validateButton?: boolean
+    saveDraftButton?: boolean
+    submitButton?: boolean
 }
 
 /**
@@ -182,6 +195,8 @@ export class AFormModelClass {
     formWizard: WizardBuilder | undefined;
 
     removableSubscribers: Unsubscribe[] | Subscription[] | any = [];
+
+    modeSubject: BehaviorSubject<Mode> = new BehaviorSubject<Mode>(null)
 
     formManager: any;
 
@@ -213,6 +228,8 @@ export class AFormModelClass {
         if (libConfig) {
             this.libraryConfig = { ...this.libraryConfig, ...libConfig}
         }
+
+        this.modeSubject.next(this.libraryConfig.viewOnly)
 
         this.store = new ConfigureStore(this).configureStore()
 
@@ -282,6 +299,7 @@ export class AFormModelClass {
      * The method that initializes the renderer
      *
      * @description This method detects the type of display mode to choose. Currently we support form and wizard
+     * default rendered as form
      */
     renderModel(): Promise<AFormModelClass> {
         // Initialize the main container
@@ -293,7 +311,7 @@ export class AFormModelClass {
                 return this.renderWizard()
             }
             default:
-                return new Promise<AFormModelClass>((resolve, reject) => reject("Display type not available."))
+                return this.renderForm()
         }
     }
 
@@ -320,8 +338,19 @@ export class AFormModelClass {
                     this.formElement?.append(divContainer)
                 }
                 this.divElement?.append(form)
+
+                // Notify form ready event
+                this.formManager = $('#' + this.uniqFormId).form({
+                    on: 'blur',
+                    inline : true,
+                    debug: false,
+                    preventLeaving: true,
+                    autoCheckRequired: true,
+                    prompt: this.errorPrompts
+                })
                 // Notify form ready event
                 this.notifyFormEvents.next({eventName: 'rendered'})
+                this.notifyFormEvents.next({eventName: 'ready'})
                 resolve(this)
             } catch (e) {
                 reject(e)
@@ -344,7 +373,7 @@ export class AFormModelClass {
                 form.setAttribute('role', 'form')
                 this.formElement = form;
                 const divContainer: HTMLDivElement = document.createElement('div');
-                divContainer.classList.add('a-form-wizard-holder');
+                divContainer.classList.add('a-form-wizard-holder', 'a-form-form');
                 divContainer.style.outline = 'none';
                 divContainer.style.margin = '1rem';
                 divContainer.tabIndex = -1
@@ -510,5 +539,20 @@ export class AFormModelClass {
 
     validateForm() {
         return this.formManager.form('validate form')
+    }
+
+    toggleView(value?: Mode): Mode {
+        if (value) {
+            this.modeSubject.next(value)
+            return value;
+        }
+        switch (this.modeSubject.getValue()) {
+            case Mode.EDIT:
+                this.modeSubject.next(Mode.VIEW)
+                return Mode.VIEW
+            case Mode.VIEW:
+                this.modeSubject.next(Mode.EDIT)
+                return Mode.EDIT
+        }
     }
 }

@@ -18,7 +18,7 @@ export class ColumnsBuilder {
 
     createColumns(): HTMLDivElement {
         const grid = document.createElement('div')
-        grid.classList.add('ui', 'grid')
+        grid.classList.add('ui', 'grid', 'a-form-column')
         this.implementColumns(grid)
         if (this.aFormModel?.customClass) {
             new ClassesHelper().addClasses(this.aFormModel?.customClass, grid)

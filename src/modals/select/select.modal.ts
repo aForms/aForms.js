@@ -1,4 +1,4 @@
-import {AFormModel, AFormModelClass} from "../../a-form.model";
+import {AFormModel, AFormModelClass, Mode} from "../../a-form.model";
 
 // @ts-ignore
 import { v4 as uuidV4 } from 'uuid';
@@ -96,6 +96,10 @@ export class SelectBuilder {
                     this.addValidation()
                     this.aFormClass.validationHelper.calculatedValue(this.selectModel)
                 } else {
+                    // Clear on hide to ensure value gets cleared when hidden
+                    if (this.selectModel.clearOnHide) {
+                        this.aFormClass.resetField(this.selectModel.key  as string)
+                    }
                     $(this.wrapper).fadeOut()
                     this.removeValidation()
                 }
@@ -167,8 +171,10 @@ export class SelectBuilder {
             values.forEach((value: LabelValue|any) => {
                 const option = document.createElement('option')
                 option.setAttribute('aria-selected', 'false')
+                option.setAttribute('aria-label', value?.[template])
+                option.setAttribute('data-text', value?.[template])
                 option.innerText = value?.[template]
-                option.setAttribute('value', value?.[valueProperty])
+                option.setAttribute('data-value', value?.[valueProperty])
                 selectElement.append(option)
             })
             if (this.selectModel.validate?.required) {
@@ -247,6 +253,10 @@ export class SelectBuilder {
 
             this.isVisible = this.aFormClass.conditionalHelper.checkCondition(this.selectModel?.conditional?.json, data)
             if (!this.isVisible) {
+                // Clear on hide to ensure value gets cleared when hidden
+                if (this.selectModel.clearOnHide) {
+                    this.aFormClass.resetField(this.selectModel.key as string)
+                }
                 $(this.wrapper).hide()
             } else {
                 this.aFormClass.validationHelper.calculatedValue(this.selectModel)

@@ -31,11 +31,14 @@ export class FunctionsHelpers {
     createToolTip(aFormModel: AFormModel, wrapper: HTMLDivElement|HTMLFieldSetElement) {
         const tooltipWrapperDiv = document.createElement('span')
         tooltipWrapperDiv.style.marginLeft = '5px'
-        tooltipWrapperDiv.setAttribute('role', 'tooltip')
+        tooltipWrapperDiv.setAttribute('role', 'button')
+        tooltipWrapperDiv.setAttribute('aria-disabled', 'true')
         this.aFormClass.validationHelper.addFocusEvent(tooltipWrapperDiv)
         const infoIcon = document.createElement('i')
         infoIcon.classList.add('info', 'icon', 'circle', 'data-tooltip')
-        infoIcon.tabIndex = -1
+        const spanItem = document.createElement('span')
+        spanItem.classList.add('visually-hidden')
+        spanItem.innerHTML = aFormModel.placeholder || ''
         // Custom tooltip
         const tooltipDiv = document.createElement('div')
         tooltipDiv.classList.add('ui', 'custom', 'popup', 'hidden')

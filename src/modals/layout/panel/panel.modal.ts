@@ -17,7 +17,7 @@ export class PanelBuilder {
 
     createPanel(): HTMLDivElement {
         const segment = document.createElement('div')
-        segment.classList.add('a-form-content-holder')
+        segment.classList.add('a-form-content-holder', 'a-form-panel')
         segment.style.outline = 'none'
         segment.tabIndex = -1
         const container = document.createElement('div')

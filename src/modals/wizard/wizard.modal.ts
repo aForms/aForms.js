@@ -26,7 +26,7 @@ export class WizardBuilder {
         breadcrumb.setAttribute('aria-label', 'Breadcrumb')
 
         const contentHolder = document.createElement('div')
-        contentHolder.classList.add('ui', 'basic', 'segment')
+        contentHolder.classList.add('ui', 'basic', 'segment', 'a-form-wizard-holder', 'a-form-form')
 
         const buttonHolder = document.createElement('div')
         buttonHolder.classList.add('buttons')
@@ -131,10 +131,15 @@ export class WizardBuilder {
                 this.aFormClass.formManager = $('#' + this.aFormClass.uniqFormId).form({
                     on: 'blur',
                     inline : true,
-                    debug: false,
-                    preventLeaving: true,
+                    debug: this.aFormClass?.libraryConfig?.debug,
+                    preventLeaving: this.aFormClass?.libraryConfig?.pageUnloadEvent,
                     autoCheckRequired: true,
-                    prompt: this.aFormClass.errorPrompts
+                    prompt: this.aFormClass.errorPrompts,
+                    templates: {
+                        // prompt: (e, t) => {
+                        //     // return $("<div/>").addClass(t).html(e[0])
+                        // }
+                    }
                 })
 
                 // Notify form ready event
