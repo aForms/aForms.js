@@ -196,7 +196,7 @@ export class AFormModelClass {
 
     removableSubscribers: Unsubscribe[] | Subscription[] | any = [];
 
-    modeSubject: BehaviorSubject<Mode> = new BehaviorSubject<Mode>(null)
+    modeSubject: BehaviorSubject<Mode> = new BehaviorSubject<Mode>(Mode.VIEW)
 
     formManager: any;
 
@@ -493,10 +493,6 @@ export class AFormModelClass {
 
     getStoreData() {
         return getFormById(this.store.getState().formData, this.uniqFormId)?.data
-    }
-
-    resetField(label: string) {
-        $('#' + this.uniqFormId).form('reset', label);
     }
 
     wizardNextPage() {

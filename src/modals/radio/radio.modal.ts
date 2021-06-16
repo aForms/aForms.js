@@ -31,24 +31,13 @@ export class RadioBuilder {
             const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
             this.isVisible = new ConditionalHelper().checkCondition(this.radioModal?.conditional?.json, data)
             if (this.wrapper) {
-                if (this.isVisible) {
-                    $(this.wrapper).fadeIn()
-                    this.addValidation()
-                    this.aFormClass.validationHelper.calculatedValue(this.radioModal)
-                } else {
-                    // Clear on hide to ensure value gets cleared when hidden
-                    if (this.radioModal.clearOnHide) {
-                        this.aFormClass.resetField(this.radioModal.key  as string)
-                    }
-                    $(this.wrapper).fadeOut()
-                    this.removeValidation()
-                }
+                this.processConditionalLogic()
             }
         })
 
         this.aFormClass.removableSubscribers.push(this.aFormClass.notifyFormEvents.asObservable().subscribe(value => {
             if (value.eventName === 'ready') {
-                this.isVisible ? this.addValidation() : this.removeValidation()
+                this.processConditionalLogic()
             }
         }))
 
@@ -95,10 +84,14 @@ export class RadioBuilder {
         }
 
         this.isVisible = this.aFormClass.conditionalHelper.checkCondition(this.radioModal?.conditional?.json, data)
-        if (!this.isVisible) {
+        if (!this.isVisible || this.radioModal.hidden) {
             // Clear on hide to ensure value gets cleared when hidden
             if (this.radioModal.clearOnHide) {
-                this.aFormClass.resetField(this.radioModal.key  as string)
+                $(this.wrapper)
+                    .find('.checkbox')
+                    .checkbox('uncheck')
+            } else {
+                this.aFormClass.validationHelper.calculatedValue(this.radioModal)
             }
             $(this.wrapper).hide()
         } else {
@@ -147,5 +140,43 @@ export class RadioBuilder {
 
     removeValidation() {
         $('#' + this.aFormClass.uniqFormId).form('remove field', this.radioModal.key)
+    }
+
+    processConditionalLogic() {
+        const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
+
+        if (this.radioModal.hidden) {
+            const conditional = this.aFormClass.conditionalHelper.checkJustCondition(this.radioModal?.conditional?.json, data)
+            if (conditional) {
+                // Clear on hide to ensure value gets cleared when hidden
+                if (this.radioModal.clearOnHide) {
+                    $(this.wrapper)
+                        .find('.checkbox')
+                        .checkbox('uncheck')                } else {
+                    this.aFormClass.validationHelper.calculatedValue(this.radioModal)
+                }
+            }
+        } else {
+            this.isVisible = this.aFormClass.conditionalHelper.checkCondition(this.radioModal?.conditional?.json, data)
+            if (!this.isVisible  || this.radioModal.hidden) {
+                // Clear on hide to ensure value gets cleared when hidden
+                if (this.radioModal.clearOnHide) {
+                    $(this.wrapper)
+                        .find('.checkbox')
+                        .checkbox('uncheck')                } else {
+                    if (this.radioModal.defaultValue) {
+                        this.aFormClass.formManager.form('set value', this.radioModal.key, this.radioModal.defaultValue)
+                    }
+                    this.aFormClass.validationHelper.calculatedValue(this.radioModal)
+                }
+                $(this.wrapper).hide()
+            } else {
+                if (this.radioModal.defaultValue) {
+                    this.aFormClass.formManager.form('set value', this.radioModal.key, this.radioModal.defaultValue)
+                }
+                this.aFormClass.validationHelper.calculatedValue(this.radioModal)
+                $(this.wrapper).fadeIn()
+            }
+        }
     }
 }

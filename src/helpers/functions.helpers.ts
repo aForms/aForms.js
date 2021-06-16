@@ -73,16 +73,16 @@ export class FunctionsHelpers {
     }
 
     addFocusEvent(element: any) {
-        element.addEventListener('focusin', () => {
-            element.style.outline = "auto"
-            element.style.outlineColor = "var(--primary-color)"
-            // radioDiv.style.backgroundColor = "var(--primary-color)"
-        })
-        element.addEventListener('focusout', () => {
-            element.style.outline = "unset"
-            element.style.outlineColor = "unset"
-            element.style.backgroundColor = "unset"
-        })
+        // element.addEventListener('focusin', () => {
+        //     element.style.outline = "auto"
+        //     element.style.outlineColor = "var(--primary-color)"
+        //     // radioDiv.style.backgroundColor = "var(--primary-color)"
+        // })
+        // element.addEventListener('focusout', () => {
+        //     element.style.outline = "unset"
+        //     element.style.outlineColor = "unset"
+        //     element.style.backgroundColor = "unset"
+        // })
     }
 
     addMutationOn(element: any){
@@ -135,16 +135,16 @@ export class FunctionsHelpers {
     calculatedValue(aFormModel: AFormModel) {
         if (aFormModel.calculateValue) {
             const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
-            const validation = new ConditionalHelper().checkCondition(aFormModel.calculateValue, data)
-            if (validation) {
+            const value = new ConditionalHelper().checkCondition(aFormModel.calculateValue, data)
+            if (value) {
                 if (aFormModel.multiple) {
-                    if (validation instanceof Array) {
-                        this.aFormClass.formManager.form('set value', aFormModel.key, validation)
+                    if (value instanceof Array) {
+                        this.aFormClass.formManager.form('set value', aFormModel.key, value)
                     } else {
-                        this.aFormClass.formManager.form('set value', aFormModel.key, [validation])
+                        this.aFormClass.formManager.form('set value', aFormModel.key, [value])
                     }
                 }
-                this.aFormClass.formManager.form('set value', aFormModel.key, validation)
+                this.aFormClass.formManager.form('set value', aFormModel.key, value)
            }
         }
     }

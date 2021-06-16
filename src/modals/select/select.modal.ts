@@ -1,4 +1,4 @@
-import {AFormModel, AFormModelClass, Mode} from "../../a-form.model";
+import {AFormModel, AFormModelClass} from "../../a-form.model";
 
 // @ts-ignore
 import { v4 as uuidV4 } from 'uuid';
@@ -87,31 +87,14 @@ export class SelectBuilder {
             this.wrapper?.querySelector('.ui.dropdown')?.classList.add('loading')
             this.isVisible = new ConditionalHelper().checkCondition(this.selectModel?.conditional?.json, data)
             if (this.wrapper) {
-                if (this.isVisible) {
-                    $(this.wrapper).fadeIn()
-                    const op = $(this.wrapper).find('.ui.dropdown');
-                    this.internalChanges = true
-                    op.dropdown('set exactly', data[this.selectModel.key as string])
-                    this.internalChanges = false
-                    this.addValidation()
-                    this.aFormClass.validationHelper.calculatedValue(this.selectModel)
-                } else {
-                    // Clear on hide to ensure value gets cleared when hidden
-                    if (this.selectModel.clearOnHide) {
-                        this.aFormClass.resetField(this.selectModel.key  as string)
-                    }
-                    $(this.wrapper).fadeOut()
-                    this.removeValidation()
-                }
+                this.processConditionalLogic()
             }
-            setTimeout(() => {
-                this.wrapper?.querySelector('.dropdown')?.classList.remove('loading')
-            }, 200)
+            this.wrapper?.querySelector('.dropdown')?.classList.remove('loading')
         })
 
         this.aFormClass.removableSubscribers.push(this.aFormClass.notifyFormEvents.asObservable().subscribe(value => {
             if (value.eventName === 'ready') {
-                this.isVisible ? this.addValidation() : this.removeValidation()
+                this.processConditionalLogic()
             }
         }))
 
@@ -168,17 +151,16 @@ export class SelectBuilder {
             placeHolderOption.setAttribute('value', "")
             placeHolderOption.innerText = this.selectModel.placeholder || ''
             selectElement.append(placeHolderOption)
-            values.forEach((value: LabelValue|any) => {
-                const option = document.createElement('option')
-                option.setAttribute('aria-selected', 'false')
-                option.setAttribute('aria-label', value?.[template])
-                option.setAttribute('data-text', value?.[template])
-                option.innerText = value?.[template]
-                option.setAttribute('data-value', value?.[valueProperty])
-                selectElement.append(option)
-            })
-            if (this.selectModel.validate?.required) {
-                selectElement.setAttribute('aria-required', 'true')
+
+            switch (dataSource) {
+                case "values":
+                    this.addOptions(values, template, valueProperty, selectElement);
+                    break
+                case "json":
+                    this.addOptions(values, template, valueProperty, selectElement)
+                    break
+                case "url":
+                    break
             }
             this.optionsCount = values.length
             this.wrapper?.append(label)
@@ -250,18 +232,8 @@ export class SelectBuilder {
                         $(this.wrapper as HTMLDivElement)?.find('.dropdown').dropdown('show')
                     })
             }
-
-            this.isVisible = this.aFormClass.conditionalHelper.checkCondition(this.selectModel?.conditional?.json, data)
-            if (!this.isVisible) {
-                // Clear on hide to ensure value gets cleared when hidden
-                if (this.selectModel.clearOnHide) {
-                    this.aFormClass.resetField(this.selectModel.key as string)
-                }
-                $(this.wrapper).hide()
-            } else {
-                this.aFormClass.validationHelper.calculatedValue(this.selectModel)
-            }
         }
+        $(this.wrapper).hide()
     }
 
     private detectChanges(e?: any[]) {
@@ -279,5 +251,62 @@ export class SelectBuilder {
 
     removeValidation() {
         this.aFormClass.formManager.form('remove field', this.selectModel.key)
+    }
+
+    private addOptions(values: any, template: string, valueProperty: string, selectElement: HTMLElement) {
+        values.forEach((value: LabelValue|any) => {
+            const option = document.createElement('option')
+            option.setAttribute('aria-selected', 'false')
+            option.innerText = value?.[template]
+            option.setAttribute('value', value?.[valueProperty])
+            selectElement.append(option)
+        })
+        if (this.selectModel.validate?.required) {
+            selectElement.setAttribute('aria-required', 'true')
+        }
+        this.optionsCount = values.length
+    }
+
+    processConditionalLogic() {
+        const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
+
+        if (this.selectModel.hidden) {
+            const conditional = this.aFormClass.conditionalHelper.checkJustCondition(this.selectModel?.conditional?.json, data)
+            if (conditional) {
+                // Clear on hide to ensure value gets cleared when hidden
+                if (this.selectModel.clearOnHide) {
+                    $(this.wrapper).find('.dropdown').dropdown('clear')
+                } else {
+                    if (this.selectModel.defaultValue) {
+                        this.aFormClass.formManager.form('set value', this.selectModel.key, this.selectModel.defaultValue)
+                    }
+                    this.aFormClass.validationHelper.calculatedValue(this.selectModel)
+                }
+            } else {
+                $(this.wrapper).find('.dropdown').dropdown('clear')
+            }
+        } else {
+            this.isVisible = this.aFormClass.conditionalHelper.checkCondition(this.selectModel?.conditional?.json, data)
+            if (!this.isVisible) {
+                // Clear on hide to ensure value gets cleared when hidden
+                if (this.selectModel.clearOnHide) {
+                    $(this.wrapper).find('.dropdown').dropdown('clear')
+                } else {
+                    if (this.selectModel.defaultValue) {
+                        this.aFormClass.formManager.form('set value', this.selectModel.key, this.selectModel.defaultValue)
+                    }
+                    this.aFormClass.validationHelper.calculatedValue(this.selectModel)
+                }
+                $(this.wrapper).hide()
+                this.removeValidation()
+            } else {
+                if (this.selectModel.defaultValue) {
+                    this.aFormClass.formManager.form('set value', this.selectModel.key, this.selectModel.defaultValue)
+                }
+                this.aFormClass.validationHelper.calculatedValue(this.selectModel)
+                this.addValidation()
+                $(this.wrapper).fadeIn()
+            }
+        }
     }
 }

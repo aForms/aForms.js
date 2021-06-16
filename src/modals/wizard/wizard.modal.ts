@@ -144,6 +144,7 @@ export class WizardBuilder {
 
                 // Notify form ready event
                 setTimeout(() => {
+                    this.aFormClass.getFormData()
                     this.aFormClass.notifyFormEvents.next({eventName: 'ready', details: {value: this.aFormClass.formManager}})
                 }, 500)
             }

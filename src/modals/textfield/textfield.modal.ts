@@ -29,6 +29,8 @@ export class TextfieldBuilder {
 
     isVisible = true
 
+    textInputElement: HTMLInputElement = document.createElement('input');
+
     constructor(private textComponent: AFormModel, private aFormClass: AFormModelClass, private formComponent?: HTMLDivElement) {
         if (formComponent) {
             formComponent.append(this.build())
@@ -37,29 +39,16 @@ export class TextfieldBuilder {
         const textVisibilitySubscriber = this.aFormClass.store.subscribe(() => {
             const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
             this.wrapper?.querySelector('.ui.icon.input')?.classList.add('loading')
-            this.isVisible = new ConditionalHelper().checkCondition(this.textComponent?.conditional?.json, data)
+            this.isVisible = new ConditionalHelper().checkCondition(this.textComponent?.conditional, data)
             if (this.wrapper) {
-                if (this.isVisible) {
-                    this.addValidation()
-                    $(this.wrapper).fadeIn()
-                    this.aFormClass.validationHelper.calculatedValue(this.textComponent)
-                } else {
-                    // Clear on hide to ensure value gets cleared when hidden
-                    if (this.textComponent.clearOnHide) {
-                        this.aFormClass.resetField(this.textComponent.key as string)
-                    }
-                    this.removeValidation()
-                    $(this.wrapper).fadeOut()
-                }
+                this.processConditionalLogic()
             }
-            setTimeout(() => {
-                this.wrapper?.querySelector('.ui.icon.input')?.classList.remove('loading')
-            }, 200)
+            this.wrapper?.querySelector('.ui.icon.input')?.classList.remove('loading')
         })
 
         this.aFormClass.removableSubscribers.push(this.aFormClass.notifyFormEvents.asObservable().subscribe(value => {
             if (value.eventName === 'ready') {
-                this.isVisible ? this.addValidation() : this.removeValidation()
+                this.processConditionalLogic();
             }
         }))
 
@@ -73,65 +62,49 @@ export class TextfieldBuilder {
     }
 
     textComponentRenderer(options: any) {
-        if (this.aFormClass.libraryConfig.viewOnly === Mode.VIEW) {
-            console.log("View mode")
-        } else {
-            const labelId = uuidV4()
-            const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
-            if (options) {
-                this.options = options
-            }
-            this.wrapper.classList.add('field');
-            this.wrapper.style.padding = '5px'
-            this.wrapper.tabIndex = -1
-            if (this.textComponent?.customClass) {
-                new ClassesHelper().addClasses(this.textComponent?.customClass, this.wrapper)
-            }
-            // create label
-            const label = document.createElement('label');
-            label.innerText = (this.textComponent.label as string)
-            label.setAttribute('id', labelId)
-
-            this.aFormClass.validationHelper.addFocusEvent(this.wrapper)
-            this.wrapper.append(label)
-            if (this.textComponent?.tooltip) {
-                const toolTip = this.aFormClass.validationHelper.createToolTip(this.textComponent, this.wrapper)
-                this.wrapper.append(toolTip)
-            }
-            const iconInputWrapper = document.createElement('div')
-            iconInputWrapper.classList.add('ui', 'icon', 'input')
-            const input = document.createElement('input')
-            input.placeholder = this.textComponent.placeholder || ""
-            input.name = (this.textComponent.key as string)
-            input.type = options?.type ? options?.type : "text"
-            input.setAttribute('aria-labelledby', labelId)
-            if (this.textComponent.validate?.required) {
-                input.setAttribute('aria-required', 'true')
-            }
-            input.onchange = () => this.aFormClass.notifyChanges(this.textComponent?.key as string);
-            input.tabIndex = this.textComponent?.tabindex ? Number(this.textComponent?.tabindex) : 0
-            fromEvent(input, 'blur').pipe(debounceTime(1000)).subscribe(value => {
-                if (this.wrapper.classList.contains('error')) {
-                    this.aFormClass.formLiveRegion.innerText = this.textComponent.label + ' is required'
-                }
-            })
-            const icon = document.createElement('i')
-            icon.classList.add('icon')
-            iconInputWrapper.append(input)
-            iconInputWrapper.append(icon)
-            this.wrapper.append(iconInputWrapper)
-
-            this.isVisible = this.aFormClass.conditionalHelper.checkCondition(this.textComponent?.conditional?.json, data)
-            if (!this.isVisible) {
-                // Clear on hide to ensure value gets cleared when hidden
-                if (this.textComponent.clearOnHide) {
-                    this.aFormClass.resetField(this.textComponent.key  as string)
-                }
-                $(this.wrapper).hide()
-            } else {
-                this.aFormClass.validationHelper.calculatedValue(this.textComponent)
-            }
+        const labelId = uuidV4()
+        if (options) {
+            this.options = options
         }
+        this.wrapper.classList.add('field');
+        this.wrapper.style.padding = '5px'
+        this.wrapper.tabIndex = -1
+        if (this.textComponent?.customClass) {
+            new ClassesHelper().addClasses(this.textComponent?.customClass, this.wrapper)
+        }
+        // create label
+        const label = document.createElement('label');
+        label.innerText = (this.textComponent.label as string)
+        label.setAttribute('id', labelId)
+
+        this.aFormClass.validationHelper.addFocusEvent(this.wrapper)
+        this.wrapper.append(label)
+        if (this.textComponent?.tooltip) {
+            const toolTip = this.aFormClass.validationHelper.createToolTip(this.textComponent, this.wrapper)
+            this.wrapper.append(toolTip)
+        }
+        const iconInputWrapper = document.createElement('div')
+        iconInputWrapper.classList.add('ui', 'icon', 'input')
+        this.textInputElement.placeholder = this.textComponent.placeholder || ""
+        this.textInputElement.name = (this.textComponent.key as string)
+        this.textInputElement.type = options?.type ? options?.type : "text"
+        this.textInputElement.setAttribute('aria-labelledby', labelId)
+        if (this.textComponent.validate?.required) {
+            this.textInputElement.setAttribute('aria-required', 'true')
+        }
+        this.textInputElement.onchange = () => this.aFormClass.notifyChanges(this.textComponent?.key as string);
+        this.textInputElement.tabIndex = this.textComponent?.tabindex ? Number(this.textComponent?.tabindex) : 0
+        fromEvent(this.textInputElement, 'blur').pipe(debounceTime(1000)).subscribe(value => {
+            if (this.wrapper.classList.contains('error')) {
+                this.aFormClass.formLiveRegion.innerText = this.textComponent.label + ' is required'
+            }
+        })
+        const icon = document.createElement('i')
+        icon.classList.add('icon')
+        iconInputWrapper.append(this.textInputElement)
+        iconInputWrapper.append(icon)
+        this.wrapper.append(iconInputWrapper)
+        $(this.wrapper).hide()
     }
 
     addValidation() {
@@ -144,5 +117,45 @@ export class TextfieldBuilder {
 
     removeValidation() {
         $('#' + this.aFormClass.uniqFormId).form('remove field', this.textComponent.key)
+    }
+
+    processConditionalLogic() {
+        const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
+
+        if (this.textComponent.hidden) {
+            const conditional = this.aFormClass.conditionalHelper.checkJustCondition(this.textComponent?.conditional?.json, data)
+            if (conditional) {
+                // Clear on hide to ensure value gets cleared when hidden
+                if (this.textComponent.clearOnHide) {
+                    this.textInputElement.value = ""
+                } else {
+                    this.aFormClass.validationHelper.calculatedValue(this.textComponent)
+                }
+            } else {
+                this.textInputElement.value = ""
+            }
+        } else {
+            this.isVisible = this.aFormClass.conditionalHelper.checkCondition(this.textComponent?.conditional?.json, data)
+            if (!this.isVisible) {
+                // Clear on hide to ensure value gets cleared when hidden
+                if (this.textComponent.clearOnHide) {
+                    this.textInputElement.value = ""
+                } else {
+                    if (this.textComponent.defaultValue) {
+                        this.aFormClass.formManager.form('set value', this.textComponent.key, this.textComponent.defaultValue)
+                    }
+                    this.aFormClass.validationHelper.calculatedValue(this.textComponent)
+                }
+                $(this.wrapper).hide()
+                this.removeValidation()
+            } else {
+                if (this.textComponent.defaultValue) {
+                    this.aFormClass.formManager.form('set value', this.textComponent.key, this.textComponent.defaultValue)
+                }
+                this.aFormClass.validationHelper.calculatedValue(this.textComponent)
+                this.addValidation()
+                $(this.wrapper).fadeIn()
+            }
+        }
     }
 }
