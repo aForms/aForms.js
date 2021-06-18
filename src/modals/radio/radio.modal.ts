@@ -158,23 +158,26 @@ export class RadioBuilder {
             }
         } else {
             this.isVisible = this.aFormClass.conditionalHelper.checkCondition(this.radioModal?.conditional?.json, data)
-            if (!this.isVisible  || this.radioModal.hidden) {
+            if (!this.isVisible) {
                 // Clear on hide to ensure value gets cleared when hidden
                 if (this.radioModal.clearOnHide) {
                     $(this.wrapper)
                         .find('.checkbox')
-                        .checkbox('uncheck')                } else {
+                        .checkbox('uncheck')
+                } else {
                     if (this.radioModal.defaultValue) {
                         this.aFormClass.formManager.form('set value', this.radioModal.key, this.radioModal.defaultValue)
                     }
                     this.aFormClass.validationHelper.calculatedValue(this.radioModal)
                 }
                 $(this.wrapper).hide()
+                this.removeValidation()
             } else {
                 if (this.radioModal.defaultValue) {
                     this.aFormClass.formManager.form('set value', this.radioModal.key, this.radioModal.defaultValue)
                 }
                 this.aFormClass.validationHelper.calculatedValue(this.radioModal)
+                this.addValidation()
                 $(this.wrapper).fadeIn()
             }
         }

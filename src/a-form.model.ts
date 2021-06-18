@@ -16,10 +16,11 @@ import {WizardBuilder} from "./modals/wizard/wizard.modal";
 import {ConditionalHelper} from "./helpers/conditional.helper";
 import { v4 as uuidV4 } from 'uuid';
 import {ConfigureStore} from "./store";
-import {configAdded, formConfig} from "./store/reducers/form-config.reducer";
+import {configAdded} from "./store/reducers/form-config.reducer";
 import {FormData, getFormById, insertFormData, updateFormData} from "./store/reducers/form-data.reducer";
 import {EnhancedStore, Unsubscribe} from "@reduxjs/toolkit";
 import { ErrorPrompt } from "./config/prompt.model";
+import axios, {AxiosInstance} from 'axios';
 
 declare var $: JQueryStatic;
 
@@ -144,8 +145,10 @@ export enum Mode {
 }
 
 export interface ProxyUrl {
-    from: string
-    to: string
+    from?: string
+    to?: string
+    headers?: string[]
+    cookies?: string[]
 }
 
 export interface LibraryConfig {
@@ -208,6 +211,8 @@ export class AFormModelClass {
 
     errorPrompts: ErrorPrompt = {};
 
+    axiosInstance: AxiosInstance = axios.create()
+
     libraryConfig: LibraryConfig = {
         wizardConfiguration: {
             cancelButton: true,
@@ -246,6 +251,10 @@ export class AFormModelClass {
                 document.documentElement.style.setProperty('--primary-color', libConfig.primaryColor);
             }
         }
+
+        this.libraryConfig.proxyUrl?.headers?.forEach(value => {
+            this.axiosInstance.defaults.headers.common[value] = localStorage.getItem(value)
+        })
 
         this.initializeAForm?.()
     }

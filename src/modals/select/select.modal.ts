@@ -2,7 +2,6 @@ import {AFormModel, AFormModelClass} from "../../a-form.model";
 
 // @ts-ignore
 import { v4 as uuidV4 } from 'uuid';
-import {FunctionsHelpers} from "../../helpers/functions.helpers";
 import {getFormById, updateFormData } from "../../store/reducers/form-data.reducer";
 import {fromEvent} from "rxjs";
 import {debounceTime} from "rxjs/operators";
@@ -160,6 +159,11 @@ export class SelectBuilder {
                     this.addOptions(values, template, valueProperty, selectElement)
                     break
                 case "url":
+                    this.aFormClass.axiosInstance
+                        .get(this.selectModel.data?.url?.replace(this.aFormClass.libraryConfig.proxyUrl?.from, this.aFormClass.libraryConfig.proxyUrl?.to))
+                        .then(value => {
+                            this.addOptions(value.data, template, valueProperty, selectElement)
+                        })
                     break
             }
             this.optionsCount = values.length
@@ -254,7 +258,7 @@ export class SelectBuilder {
     }
 
     private addOptions(values: any, template: string, valueProperty: string, selectElement: HTMLElement) {
-        values.forEach((value: LabelValue|any) => {
+        values?.forEach((value: LabelValue|any) => {
             const option = document.createElement('option')
             option.setAttribute('aria-selected', 'false')
             option.innerText = value?.[template]
@@ -264,7 +268,7 @@ export class SelectBuilder {
         if (this.selectModel.validate?.required) {
             selectElement.setAttribute('aria-required', 'true')
         }
-        this.optionsCount = values.length
+        this.optionsCount = values?.length
     }
 
     processConditionalLogic() {
