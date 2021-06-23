@@ -136,9 +136,9 @@ export class WizardBuilder {
                     autoCheckRequired: true,
                     prompt: this.aFormClass.errorPrompts,
                     templates: {
-                        // prompt: (e, t) => {
-                        //     // return $("<div/>").addClass(t).html(e[0])
-                        // }
+                        prompt: (e: string[], t: any) => {
+                             return $("<div class='ui text' aria-describedby/>").addClass(t).html(e[0])
+                        }
                     }
                 })
 

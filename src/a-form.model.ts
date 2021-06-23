@@ -89,6 +89,7 @@ export interface AFormModel extends ProjectModel, TextfieldModal, TextareaModal,
     useExactSearch?: boolean
     dataGridLabel?: boolean
     src?: string
+    selectValues?: string
 }
 
 export interface ProjectModel {

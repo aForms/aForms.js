@@ -8,6 +8,7 @@ import {ConditionalHelper} from "../../helpers/conditional.helper";
 import {v4 as uuidV4} from 'uuid';
 import {fromEvent} from "rxjs";
 import {debounceTime} from "rxjs/operators";
+import {MutationHelper} from "../../helpers/mutation.helper";
 
 export interface TextfieldModal extends TextCommonModal {
     inputFormat?: string
@@ -28,6 +29,8 @@ export class TextfieldBuilder {
     initialLoad = true
 
     isVisible = true
+
+    errorMutationObserver = new MutationHelper().errorMutationObserver
 
     textInputElement: HTMLInputElement = document.createElement('input');
 
@@ -105,6 +108,8 @@ export class TextfieldBuilder {
         iconInputWrapper.append(icon)
         this.wrapper.append(iconInputWrapper)
         $(this.wrapper).hide()
+
+        this.errorMutationObserver.observe(this.wrapper, {attributes: true})
     }
 
     addValidation() {
@@ -129,6 +134,9 @@ export class TextfieldBuilder {
                 if (this.textComponent.clearOnHide) {
                     this.textInputElement.value = ""
                 } else {
+                    if (this.textComponent.defaultValue) {
+                        this.aFormClass.formManager.form('set value', this.textComponent.key, this.textComponent.defaultValue)
+                    }
                     this.aFormClass.validationHelper.calculatedValue(this.textComponent)
                 }
             } else {

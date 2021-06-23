@@ -67,6 +67,17 @@ export class RadioBuilder {
                 label.setAttribute('id', uuid);
                 label.innerText = this.radioModal?.label as string
                 this.wrapper.append(label)
+                if (this.radioModal.validate.required) {
+                    const span = document.createElement('span')
+                    span.innerText = `this field is required`
+                    span.classList.add('visually-hidden')
+                    span.style.position = 'absolute'
+                    span.style.left = '-10000px'
+                    span.style.width = '1px'
+                    span.style.height = '1px'
+                    span.style.overflow = 'hidden'
+                    label.append(span)
+                }
             }
             if (this.radioModal.tooltip) {
                 const toolTip = this.aFormClass.validationHelper.createToolTip(this.radioModal, this.wrapper)
@@ -97,7 +108,6 @@ export class RadioBuilder {
         } else {
             this.aFormClass.validationHelper.calculatedValue(this.radioModal)
         }
-
         return this.wrapper
     }
 

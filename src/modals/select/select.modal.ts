@@ -6,6 +6,7 @@ import {getFormById, updateFormData } from "../../store/reducers/form-data.reduc
 import {fromEvent} from "rxjs";
 import {debounceTime} from "rxjs/operators";
 import {ConditionalHelper} from "../../helpers/conditional.helper";
+import {MutationHelper} from "../../helpers/mutation.helper";
 
 
 export interface SelectModal {
@@ -77,6 +78,8 @@ export class SelectBuilder {
 
     isVisible = true
 
+    errorMutationObserver = new MutationHelper().errorMutationObserver
+
     constructor(private selectModel: AFormModel, private aFormClass: AFormModelClass, container?: HTMLDivElement) {
         if (container) {
             container.append(this.build())
@@ -117,6 +120,7 @@ export class SelectBuilder {
         // Live region to notify screen reader about changes
         const liveRegion = document.createElement('div')
         liveRegion.setAttribute('role', 'status')
+        liveRegion.setAttribute('aria-atomic', 'true')
         liveRegion.setAttribute('aria-live', 'polite')
         liveRegion.classList.add('visually-hidden')
         liveRegion.style.position = 'absolute'
@@ -160,9 +164,10 @@ export class SelectBuilder {
                     break
                 case "url":
                     this.aFormClass.axiosInstance
-                        .get(this.selectModel.data?.url?.replace(this.aFormClass.libraryConfig.proxyUrl?.from, this.aFormClass.libraryConfig.proxyUrl?.to))
+                        .get(this.selectModel.data?.url?.replace(this.aFormClass.libraryConfig.proxyUrl?.from,
+                            this.aFormClass.libraryConfig.proxyUrl?.to))
                         .then(value => {
-                            this.addOptions(value.data, template, valueProperty, selectElement)
+                            this.addOptions(this.selectModel.selectValues ? value?.data?.[this.selectModel.selectValues] : value?.data, template, valueProperty, selectElement)
                         })
                     break
             }
@@ -190,26 +195,21 @@ export class SelectBuilder {
                         this.aFormClass.notifyChanges(this.selectModel?.key as string)
                         this.aFormClass.formLiveRegion.innerText = "Selected, " + label
                     }
+                    $(this.wrapper).find('.remove.icon')
+                        .attr('aria-label', label)
+                },
+                onShow: () => {
+                    $(this.wrapper).find('input.search').attr('aria-expanded', 'true')
                 },
                 onHide: () => {
+                    $(this.wrapper).find('input.search').attr('aria-expanded', 'false')
                     this.aFormClass.formManager.form('is valid', this.selectModel.key, true)
-                    setTimeout(() => {
-                        if (this.wrapper?.classList.contains('error')) {
-                            liveRegion.setAttribute('aria-live', 'alert')
-                            liveRegion.innerText = '' + this.wrapper?.querySelector('.ui.red.prompt')?.textContent || ''
-                        } else {
-                            liveRegion.setAttribute('aria-live', 'polite')
-                        }
-                    }, 1000)
                 },
                 showOnFocus: false,
                 onNoResults: () => {
                     liveRegion.innerText = "No result found, please try narrowing your search."
                 }
             })
-
-            // const choices = $(this.wrapper).find('.menu')?.children()?.not('.filtered')
-
 
             fromEvent($(this.wrapper).find('input.search'), 'keydown')
                 .pipe(debounceTime(1000)).subscribe(value => {
@@ -221,23 +221,56 @@ export class SelectBuilder {
 
 
             $(this.wrapper).find('input.search')
-                .attr('aria-haspopup', 'listbox')
+                .attr('role', 'combobox')
                 .attr('aria-labelledby', uuid)
                 .attr('aria-owns', menuId)
                 .attr('aria-autocomplete', 'both')
-                .attr('aria-controls', 'list')
+                .attr('aria-controls', menuId)
                 .attr('id', inputSearch)
+                .attr('aria-expanded', 'false')
+                .on('input', (v) => {
+                    if (v) {
+                        const length = $(this.wrapper).find('div.menu')?.children()?.not('.filtered')?.length
+                        liveRegion.innerHTML = `${length} options available`
+                    } else {
+                        const length = $(this.wrapper).find('div.menu')?.length
+                        liveRegion.innerHTML = `${length} options available`
+                    }
+                })
+            $(this.wrapper).find('.dropdown.icon')
+                .attr('tabIndex', '0')
+            $(this.wrapper).find('.remove.icon')
+                .attr('tabIndex', '0')
             $(this.wrapper).find('div.menu')
                 .attr('id', menuId)
+                .attr('role', 'listbox')
 
             if (this.selectModel.multiple) {
                 $(this.wrapper).find('div.ui.dropdown')
                     .on('click', () => {
                         $(this.wrapper as HTMLDivElement)?.find('.dropdown').dropdown('show')
                     })
+
+            } else {
+                $(this.wrapper).find('div.ui.dropdown>div.menu').children().each((index, element) => {
+                    const elementId = uuidV4();
+                    element.setAttribute('id', elementId)
+                    element.onclick = () => {
+                        $(this.wrapper).find('div.ui.dropdown>input').each((index1, element1) => {
+                            element1.setAttribute('aria-activedescendant', elementId)
+                        })
+                    }
+                })
+            }
+
+            if (this.selectModel.validate?.required) {
+                selectElement.setAttribute('aria-required', 'true')
+                this.wrapper.querySelectorAll('input')?.forEach(value => value.setAttribute('aria-required', 'true'))
             }
         }
         $(this.wrapper).hide()
+
+        this.errorMutationObserver.observe(this.wrapper, {attributes: true})
     }
 
     private detectChanges(e?: any[]) {
@@ -260,14 +293,12 @@ export class SelectBuilder {
     private addOptions(values: any, template: string, valueProperty: string, selectElement: HTMLElement) {
         values?.forEach((value: LabelValue|any) => {
             const option = document.createElement('option')
+            option.setAttribute('role', 'option')
             option.setAttribute('aria-selected', 'false')
             option.innerText = value?.[template]
             option.setAttribute('value', value?.[valueProperty])
             selectElement.append(option)
         })
-        if (this.selectModel.validate?.required) {
-            selectElement.setAttribute('aria-required', 'true')
-        }
         this.optionsCount = values?.length
     }
 

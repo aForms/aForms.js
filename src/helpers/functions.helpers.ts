@@ -29,6 +29,7 @@ export class FunctionsHelpers {
     }
 
     createToolTip(aFormModel: AFormModel, wrapper: HTMLDivElement|HTMLFieldSetElement) {
+        const tooltipId = uuidV4()
         const tooltipWrapperDiv = document.createElement('span')
         tooltipWrapperDiv.style.marginLeft = '5px'
         tooltipWrapperDiv.setAttribute('role', 'button')
@@ -38,20 +39,26 @@ export class FunctionsHelpers {
         infoIcon.classList.add('info', 'icon', 'circle', 'data-tooltip')
         const spanItem = document.createElement('span')
         spanItem.classList.add('visually-hidden')
-        spanItem.innerHTML = aFormModel.placeholder || ''
+        spanItem.style.position = 'absolute'
+        spanItem.style.left = '-10000px'
+        spanItem.style.width = '1px'
+        spanItem.style.height = '1px'
+        spanItem.style.overflow = 'hidden'
+        spanItem.innerHTML = aFormModel.label || ''
         // Custom tooltip
         const tooltipDiv = document.createElement('div')
         tooltipDiv.classList.add('ui', 'custom', 'popup', 'hidden')
-        tooltipDiv.innerText = aFormModel?.tooltip as string ?? 'No content'
-        tooltipWrapperDiv.append(infoIcon)
-        tooltipWrapperDiv.append(tooltipDiv)
+        tooltipDiv.setAttribute('role', 'tooltip')
+        tooltipDiv.setAttribute('id', tooltipId)
+        tooltipDiv.innerText = aFormModel?.tooltip as string ?? ''
+        tooltipWrapperDiv.append(infoIcon, spanItem, tooltipDiv)
         tooltipWrapperDiv.tabIndex = 0
         this.initializeTooltip(wrapper, tooltipWrapperDiv)
         return tooltipWrapperDiv
     }
 
     initializeTooltip(wrapper: HTMLDivElement|HTMLFieldSetElement, tooltipSpan: HTMLDivElement|HTMLSpanElement) {
-        // wrapper.setAttribute('aria-describedby', tooltipSpan?.getAttribute('id') as string)
+        tooltipSpan.setAttribute('aria-describedby', tooltipSpan?.querySelector('.popup').getAttribute('id') as string)
         $(tooltipSpan)
             .popup({
                 popup: $(tooltipSpan).find('.ui.custom'),
