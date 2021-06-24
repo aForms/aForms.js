@@ -47,7 +47,8 @@ export default {
         copy({
             targets: [
                 { src: 'src', dest: 'dist' },
-                { src: ['README.md', "LICENSE.md", "code-of-conduct.md" ], dest: 'dist' }
+                { src: ['README.md', "LICENSE.md", "code-of-conduct.md" ], dest: 'dist' },
+                { src: 'src/a-form.css', dest: 'dist' }
             ]
         }),
         // Allow node_modules resolution, so you can use 'external' to control

@@ -38,7 +38,6 @@ export class TextfieldBuilder {
         if (formComponent) {
             formComponent.append(this.build())
         }
-
         const textVisibilitySubscriber = this.aFormClass.store.subscribe(() => {
             const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
             this.wrapper?.querySelector('.ui.icon.input')?.classList.add('loading')
@@ -54,13 +53,13 @@ export class TextfieldBuilder {
                 this.processConditionalLogic();
             }
         }))
-
         this.aFormClass.removableSubscribers.push(textVisibilitySubscriber)
     }
 
     build(options?: TextOptions): HTMLDivElement {
         this.wrapper = document.createElement('div');
         this.textComponentRenderer(options)
+        this.aFormClass.renderHelper.renderToggle(this.wrapper)
         return this.wrapper
     }
 
@@ -129,7 +128,7 @@ export class TextfieldBuilder {
 
         if (this.textComponent.hidden) {
             const conditional = this.aFormClass.conditionalHelper.checkJustCondition(this.textComponent?.conditional?.json, data)
-            if (conditional) {
+            if (conditional || this.textComponent?.conditional?.json === undefined || this.textComponent?.conditional?.json === null) {
                 // Clear on hide to ensure value gets cleared when hidden
                 if (this.textComponent.clearOnHide) {
                     this.textInputElement.value = ""

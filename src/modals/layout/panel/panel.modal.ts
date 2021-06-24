@@ -1,5 +1,7 @@
 import {AFormModel, AFormModelClass} from "../../../a-form.model";
 import {ClassesHelper} from "../../../helpers/classes.helper";
+import {getFormById} from "../../../store/reducers/form-data.reducer";
+import {ConditionalHelper} from "../../../helpers/conditional.helper";
 
 export interface PanelModal {
     collapsible?: boolean,
@@ -12,31 +14,62 @@ export interface PanelModal {
 
 export class PanelBuilder {
 
+    wrapper: HTMLDivElement = document.createElement('div')
+
+    header: HTMLHeadingElement = document.createElement('h3')
+
+    isVisible = true
+
     constructor(private aFormModel: AFormModel | undefined,
-                private aFormModalClass: AFormModelClass) { }
+                private aFormClass: AFormModelClass) {
+        if (this.aFormModel.conditional?.json) {
+            const panelSubscriber = this.aFormClass.store.subscribe(() => {
+                const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
+                this.isVisible = new ConditionalHelper().checkCondition(this.aFormModel?.conditional?.json, data)
+                if (!this.isVisible) {
+                    this.wrapper.classList.add('a-form-hidden')
+                    this.header.classList.add('a-form-hidden')
+                } else {
+                    this.wrapper.classList.remove('a-form-hidden')
+                    this.header.classList.remove('a-form-hidden')
+                }
+            })
+            this.aFormClass.removableSubscribers.push(panelSubscriber)
+        }
+    }
 
     createPanel(): HTMLDivElement {
-        const segment = document.createElement('div')
-        segment.classList.add('a-form-content-holder', 'a-form-panel')
-        segment.style.outline = 'none'
-        segment.tabIndex = -1
+        const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
+        this.wrapper.classList.add('a-form-content-holder', 'a-form-panel')
+        this.wrapper.style.outline = 'none'
+        this.wrapper.tabIndex = -1
         const container = document.createElement('div')
         if (this.aFormModel?.customClass) {
             new ClassesHelper().addClasses(this.aFormModel?.customClass, container)
         }
         if (!this.aFormModel?.hideLabel) {
-            segment.classList.add('ui', 'attached', 'segment')
-            if (typeof this.aFormModel?.label === "string") {
-                const h3 = document.createElement('h3')
-                h3.classList.add('ui', 'top', 'attached', 'header')
-                h3.innerText = this.aFormModel.label ?? ''
-                container.append(h3)
+            this.wrapper.classList.add('ui', 'attached', 'segment')
+            if (typeof this.aFormModel?.title === "string") {
+                this.header.classList.add('ui', 'top', 'attached', 'header')
+                this.header.innerText = this.aFormModel.title ?? ''
+                container.append(this.header)
             }
         }
         container.tabIndex = -1
         container.style.marginBottom = '1rem'
-        container.append(segment)
-        this.addInternalComponents(segment)
+        container.append(this.wrapper)
+        this.addInternalComponents(this.wrapper)
+
+        this.isVisible = new ConditionalHelper().checkCondition(this.aFormModel?.conditional?.json, data)
+
+        if (!this.isVisible) {
+            this.wrapper.classList.add('a-form-hidden')
+            this.header.classList.add('a-form-hidden')
+        } else {
+            this.wrapper.classList.remove('a-form-hidden')
+            this.header.classList.remove('a-form-hidden')
+        }
+
         return container
     }
 
@@ -45,7 +78,7 @@ export class PanelBuilder {
      */
     addInternalComponents(container: HTMLDivElement) {
         this.aFormModel?.components?.forEach(value => {
-            this.aFormModalClass.renderer.renderComponent(value, container)
+            this.aFormClass.renderer.renderComponent(value, container)
         })
     }
 

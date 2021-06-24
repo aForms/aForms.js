@@ -1,5 +1,5 @@
 import {LabelValue} from "../select/select.modal";
-import {AFormModel, AFormModelClass} from "../../a-form.model";
+import {AFormModel, AFormModelClass, Mode} from "../../a-form.model";
 import {ClassesHelper} from "../../helpers/classes.helper";
 
 // @ts-ignore
@@ -25,7 +25,13 @@ export class RadioBuilder {
 
     isVisible = true
 
-    constructor(private radioModal: AFormModel, private aFormClass: AFormModelClass) {
+    showViewMode = false
+
+    constructor(private radioModal: AFormModel, private aFormClass: AFormModelClass, private formComponent?: HTMLDivElement) {
+
+        if (formComponent) {
+            formComponent.append(this.build())
+        }
 
         const selectStoreSubscriber = this.aFormClass.store.subscribe(() => {
             const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
@@ -108,6 +114,21 @@ export class RadioBuilder {
         } else {
             this.aFormClass.validationHelper.calculatedValue(this.radioModal)
         }
+
+        this.aFormClass.modeSubject.asObservable().subscribe(value => {
+            switch (value) {
+                case Mode.EDIT:
+                    $(this.wrapper)
+                        .find('.checkbox')
+                        .checkbox('set enabled')
+                    break
+                case Mode.VIEW:
+                    $(this.wrapper)
+                        .find('.checkbox')
+                        .checkbox('set disabled')
+                    break
+            }
+        })
         return this.wrapper
     }
 

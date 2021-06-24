@@ -1,0 +1,24 @@
+.a-form-view-mode > .dropdown {
+    border: none !important;
+    padding-left: 0 !important;
+    pointer-events: none;
+}
+
+.a-form-view-mode > .dropdown > .icon, .a-form-view-mode > .dropdown > a > .icon {
+    display: none;
+}
+
+.a-form-view-mode > .input > input {
+    border: none !important;
+    padding-left: 0 !important;
+    pointer-events: none;
+}
+
+.a-form-hidden {
+    display: none;
+}
+
+.a-form-view-mode > button {
+    display: none;
+}
+

@@ -79,6 +79,8 @@ export class ButtonBuilder {
                  }
          }
         buttonWrapper.append(buttonDiv)
+
+        this.aFormModelClass.renderHelper.renderToggle(buttonWrapper)
         return buttonWrapper
     }
 

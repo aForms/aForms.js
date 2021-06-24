@@ -146,8 +146,11 @@ export enum Mode {
 }
 
 export interface ProxyUrl {
-    from?: string
-    to?: string
+    cached?: number
+    proxyRequest?: {
+        from?: string
+        to?: string
+    }[]
     headers?: string[]
     cookies?: string[]
 }
@@ -161,7 +164,7 @@ export interface LibraryConfig {
     proxyUrl?: ProxyUrl
     debug?: boolean
     pageUnloadEvent?: boolean
-    viewOnly?: Mode
+    mode?: Mode
 }
 
 export interface WizardConfig {
@@ -195,6 +198,8 @@ export class AFormModelClass {
     conditionalHelper = new ConditionalHelper();
 
     validationHelper = new FunctionsHelpers(this);
+
+    renderHelper = new RendererHelper(this)
 
     formWizard: WizardBuilder | undefined;
 
@@ -235,7 +240,7 @@ export class AFormModelClass {
             this.libraryConfig = { ...this.libraryConfig, ...libConfig}
         }
 
-        this.modeSubject.next(this.libraryConfig.viewOnly)
+        this.modeSubject.next(this.libraryConfig.mode ?? Mode.EDIT)
 
         this.store = new ConfigureStore(this).configureStore()
 

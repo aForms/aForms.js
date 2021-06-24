@@ -3,7 +3,7 @@ import {TextareaBuilder} from "../modals/textarea/textarea.modal";
 import {TextfieldBuilder} from "../modals/textfield/textfield.modal";
 import {PanelBuilder} from "../modals/layout/panel/panel.modal";
 import {BasicWrapperBuilder} from "../modals/layout/basic-wrapper/basic-wrapper.modal";
-import {AFormModel, AFormModelClass} from "../a-form.model";
+import {AFormModel, AFormModelClass, Mode} from "../a-form.model";
 import {ContentBuilder} from "../modals/content/content.modal";
 import {ColumnsBuilder} from "../modals/layout/columns/columns.modal";
 import {RadioBuilder} from "../modals/radio/radio.modal";
@@ -71,6 +71,19 @@ export class RendererHelper {
                 container?.append(basicWrapperBuilderDiv)
                 break;
         }
+    }
+
+    renderToggle(wrapper: HTMLDivElement) {
+        this.aFormsClass.modeSubject.asObservable().subscribe(value => {
+            switch (value) {
+                case Mode.EDIT:
+                    wrapper.classList?.remove?.('a-form-view-mode')
+                    break
+                case Mode.VIEW:
+                    wrapper.classList.add('a-form-view-mode')
+                    break
+            }
+        })
     }
 
 }

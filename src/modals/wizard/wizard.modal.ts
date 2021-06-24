@@ -10,8 +10,9 @@ export class WizardBuilder {
 
     wrapper = document.createElement('div')
 
-    constructor(private aFormModel: AFormModel, private aFormClass: AFormModelClass, private conditionalHelper: ConditionalHelper) { }
+    breadcrumb = document.createElement('nav')
 
+    constructor(private aFormModel: AFormModel, private aFormClass: AFormModelClass, private conditionalHelper: ConditionalHelper) { }
 
     /**
      * Builds the wizard breadcrumb and container for form
@@ -21,9 +22,8 @@ export class WizardBuilder {
         this.wrapper = document.createElement('div')
         this.wrapper.style.margin = '1rem'
 
-        const breadcrumb = document.createElement('nav')
-        breadcrumb.classList.add('ui', 'breadcrumb')
-        breadcrumb.setAttribute('aria-label', 'Breadcrumb')
+        this.breadcrumb.classList.add('ui', 'breadcrumb')
+        this.breadcrumb.setAttribute('aria-label', 'Breadcrumb')
 
         const contentHolder = document.createElement('div')
         contentHolder.classList.add('ui', 'basic', 'segment', 'a-form-wizard-holder', 'a-form-form')
@@ -70,14 +70,6 @@ export class WizardBuilder {
                         }
                         buttonHolder.append(buttonDiv)
                     }
-
-                    // if (this.aFormClass?.libraryConfig?.wizardConfiguration?.saveDraftButton) {
-                    //     const saveButtonDiv = document.createElement('div')
-                    //     saveButtonDiv.classList.add('ui', 'button')
-                    //     saveButtonDiv.innerText = 'Save as Draft'
-                    //     saveButtonDiv.tabIndex = 0;
-                    //     buttonHolder.append(saveButtonDiv)
-                    // }
 
                     if (this.aFormClass?.libraryConfig?.wizardConfiguration?.validateButton) {
                         const validateButtonDiv = document.createElement('div')
@@ -150,32 +142,46 @@ export class WizardBuilder {
             }
         })
 
-        this.aFormModel?.components?.forEach((value: AFormModel, index) => {
-            const a = document.createElement('a')
-            a.classList.add('section')
-            a.innerText = value?.title as string
-            a.style.padding = '5px'
-            a.style.color = 'var(--primary-color)'
-            this.aFormClass.validationHelper.addFocusEvent(a)
-            a.setAttribute('role', 'button')
-            a.tabIndex = 0
-            if (index !== 0) {
-                const i = document.createElement('i')
-                i.classList.add('right', 'angle', 'icon', 'divider')
-                breadcrumb.append(i)
-            } else {
-                a.setAttribute('aria-current', 'location')
-                a.classList.add('active')
-            }
-            a.addEventListener('click', ev => {
-                this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, currentPage: index}))
-            })
-            breadcrumb.append(a)
+        this.buildBreadcrumb()
+
+        this.aFormClass.store.subscribe(() => {
+            this.buildBreadcrumb()
         })
-        this.wrapper.append(breadcrumb)
+
+        this.wrapper.append(this.breadcrumb)
         this.wrapper.append(contentHolder)
         this.wrapper.append(buttonHolder)
         return this.wrapper
+    }
+
+    buildBreadcrumb() {
+        this.cleanBreadcrumb()
+        const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
+        this.aFormModel?.components?.forEach((value: AFormModel, index) => {
+            const visible = this.aFormClass.conditionalHelper.checkCondition(value?.conditional?.json, data)
+            if (visible) {
+                const a = document.createElement('a')
+                a.classList.add('section')
+                a.innerText = value?.title as string
+                a.style.padding = '5px'
+                a.style.color = 'var(--primary-color)'
+                this.aFormClass.validationHelper.addFocusEvent(a)
+                a.setAttribute('role', 'button')
+                a.tabIndex = 0
+                if (index !== 0) {
+                    const i = document.createElement('i')
+                    i.classList.add('right', 'angle', 'icon', 'divider')
+                    this.breadcrumb.append(i)
+                } else {
+                    a.setAttribute('aria-current', 'location')
+                    a.classList.add('active')
+                }
+                a.addEventListener('click', ev => {
+                    this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, currentPage: index}))
+                })
+                this.breadcrumb.append(a)
+            }
+        })
     }
 
     togglePage(index: number, ev?: MouseEvent, ) {
@@ -191,5 +197,9 @@ export class WizardBuilder {
                 }
             }
         });
+    }
+
+    private cleanBreadcrumb() {
+        this.breadcrumb = document.createElement('nav')
     }
 }

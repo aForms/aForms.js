@@ -1,8 +1,8 @@
-import {AFormModel, AFormModelClass} from "../../a-form.model";
+import {AFormModel, AFormModelClass, Mode} from "../../a-form.model";
 
 // @ts-ignore
-import { v4 as uuidV4 } from 'uuid';
-import {getFormById, updateFormData } from "../../store/reducers/form-data.reducer";
+import {v4 as uuidV4} from 'uuid';
+import {getFormById, updateFormData} from "../../store/reducers/form-data.reducer";
 import {fromEvent} from "rxjs";
 import {debounceTime} from "rxjs/operators";
 import {ConditionalHelper} from "../../helpers/conditional.helper";
@@ -84,6 +84,7 @@ export class SelectBuilder {
         if (container) {
             container.append(this.build())
         }
+
         const selectStoreSubscriber = this.aFormClass.store.subscribe(() => {
             const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
             this.wrapper?.querySelector('.ui.dropdown')?.classList.add('loading')
@@ -106,6 +107,7 @@ export class SelectBuilder {
     build(): HTMLDivElement {
         this.wrapper = document.createElement('div');
         this.selectComponentRenderer(this.options)
+        this.aFormClass.renderHelper.renderToggle(this.wrapper)
         return this.wrapper
     }
 
@@ -163,9 +165,9 @@ export class SelectBuilder {
                     this.addOptions(values, template, valueProperty, selectElement)
                     break
                 case "url":
+                    const proxyRequest = this.performProxyRequest(this.selectModel.data?.url);
                     this.aFormClass.axiosInstance
-                        .get(this.selectModel.data?.url?.replace(this.aFormClass.libraryConfig.proxyUrl?.from,
-                            this.aFormClass.libraryConfig.proxyUrl?.to))
+                        .get(proxyRequest)
                         .then(value => {
                             this.addOptions(this.selectModel.selectValues ? value?.data?.[this.selectModel.selectValues] : value?.data, template, valueProperty, selectElement)
                         })
@@ -343,5 +345,13 @@ export class SelectBuilder {
                 $(this.wrapper).fadeIn()
             }
         }
+    }
+
+    private performProxyRequest(url: string | undefined): string {
+        let val = url
+        this.aFormClass.libraryConfig.proxyUrl?.proxyRequest?.forEach(requestUrl => {
+            val = val.replace(requestUrl.from, requestUrl.to)
+        })
+        return val
     }
 }
