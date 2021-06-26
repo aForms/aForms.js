@@ -4,7 +4,7 @@ import {ClassesHelper} from "../../helpers/classes.helper";
 
 // @ts-ignore
 import { v4 as uuidV4 } from 'uuid';
-import {getFormById} from "../../store/reducers/form-data.reducer";
+import {getFormById, updateFormData} from "../../store/reducers/form-data.reducer";
 import {ConditionalHelper} from "../../helpers/conditional.helper";
 
 declare var $: JQueryStatic;
@@ -69,11 +69,12 @@ export class RadioBuilder {
         if (this.radioModal.key) {
             if (this.radioModal?.label) {
                 const label = document.createElement('label')
+                label.classList.add('a-form-label-radio')
                 label.setAttribute('for', this.radioModal.key)
                 label.setAttribute('id', uuid);
                 label.innerText = this.radioModal?.label as string
                 this.wrapper.append(label)
-                if (this.radioModal.validate.required) {
+                if (this.radioModal?.validate?.required) {
                     const span = document.createElement('span')
                     span.innerText = `this field is required`
                     span.classList.add('visually-hidden')
@@ -86,17 +87,20 @@ export class RadioBuilder {
                 }
             }
             if (this.radioModal.tooltip) {
-                const toolTip = this.aFormClass.validationHelper.createToolTip(this.radioModal, this.wrapper)
-                this.wrapper.append(toolTip)
+                const {tooltipWrapperDiv, tooltipDiv} = this.aFormClass.validationHelper.createToolTip(this.radioModal, this.wrapper)
+                this.wrapper.append(tooltipWrapperDiv, tooltipDiv)
             }
             this.addRadioFields();
             $(this.wrapper)
                 .find('.checkbox')
-                .checkbox()
-            $(this.wrapper)
-                .find('.checkbox').on('change', () => {
-                    this.aFormClass.notifyChanges(this.radioModal.key as string)
-            })
+                .checkbox({
+                    onChange: () => {
+                        const value = $(this.wrapper).find('.checkbox.checked > input')?.val()
+                        this.aFormClass.setFormData(value, this.radioModal?.key as string)
+                        const storeData = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
+                        this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, data: {...storeData, ...{[this.radioModal?.key as string]: value}}}))
+                    }
+                })
 
         }
 

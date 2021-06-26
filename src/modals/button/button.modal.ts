@@ -1,7 +1,6 @@
-import {AFormModel, AFormModelClass} from "../../a-form.model";
+import {AFormModel, AFormModelClass, FormType} from "../../a-form.model";
 import {ClassesHelper} from "../../helpers/classes.helper";
 import {DefaultsHelper} from "../../helpers/defaults.helper";
-import {FunctionsHelpers} from "../../helpers/functions.helpers";
 
 export interface ButtonModal {
     disableOnInvalid?: boolean,
@@ -20,8 +19,12 @@ export class ButtonBuilder {
 
     constructor(private buttonModal: AFormModel, private aFormModelClass: AFormModelClass) { }
 
-    build(): HTMLDivElement {
+    build(isWizard: FormType): HTMLDivElement {
         const buttonWrapper = document.createElement('div')
+        console.log(isWizard)
+        if (isWizard === FormType.WIZARD) {
+            return buttonWrapper;
+        }
         buttonWrapper.style.display = 'inline'
         buttonWrapper.style.padding = '5px'
         const buttonDiv = document.createElement('button');

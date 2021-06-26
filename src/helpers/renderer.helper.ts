@@ -17,7 +17,7 @@ export class RendererHelper {
         switch (aFormModel.type) {
             case "button":
                 const buttonBuilder = new ButtonBuilder(aFormModel, this.aFormsClass)
-                const buttonBuilderDiv = buttonBuilder.build();
+                const buttonBuilderDiv = buttonBuilder.build(this.aFormsClass.formType);
                 container?.append(buttonBuilderDiv)
                 break;
             case "textarea":

@@ -2,7 +2,7 @@ import {TextCommonModal} from "../text-common/text-common.modal";
 import {AFormModel, AFormModelClass, Mode} from "../../a-form.model";
 import {ClassesHelper} from "../../helpers/classes.helper";
 import {DefaultsHelper} from "../../helpers/defaults.helper";
-import {getFormById} from "../../store/reducers/form-data.reducer";
+import {getFormById, updateFormData} from "../../store/reducers/form-data.reducer";
 import {ConditionalHelper} from "../../helpers/conditional.helper";
 // @ts-ignore
 import {v4 as uuidV4} from 'uuid';
@@ -81,9 +81,9 @@ export class TextfieldBuilder {
 
         this.aFormClass.validationHelper.addFocusEvent(this.wrapper)
         this.wrapper.append(label)
-        if (this.textComponent?.tooltip) {
-            const toolTip = this.aFormClass.validationHelper.createToolTip(this.textComponent, this.wrapper)
-            this.wrapper.append(toolTip)
+        if (this.textComponent.tooltip) {
+            const {tooltipWrapperDiv, tooltipDiv} = this.aFormClass.validationHelper.createToolTip(this.textComponent, this.wrapper)
+            this.wrapper.append(tooltipWrapperDiv, tooltipDiv)
         }
         const iconInputWrapper = document.createElement('div')
         iconInputWrapper.classList.add('ui', 'icon', 'input')
@@ -96,10 +96,13 @@ export class TextfieldBuilder {
         }
         this.textInputElement.onchange = () => this.aFormClass.notifyChanges(this.textComponent?.key as string);
         this.textInputElement.tabIndex = this.textComponent?.tabindex ? Number(this.textComponent?.tabindex) : 0
-        fromEvent(this.textInputElement, 'blur').pipe(debounceTime(1000)).subscribe(value => {
+        fromEvent(this.textInputElement, 'input').pipe(debounceTime(1000)).subscribe(value => {
             if (this.wrapper.classList.contains('error')) {
                 this.aFormClass.formLiveRegion.innerText = this.textComponent.label + ' is required'
             }
+            this.aFormClass.setFormData(this.textInputElement.value, this.textComponent?.key as string)
+            const storeData = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
+            this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, data: {...storeData, ...{[this.textComponent?.key as string]: this.textInputElement.value}}}))
         })
         const icon = document.createElement('i')
         icon.classList.add('icon')

@@ -19,6 +19,27 @@
 }
 
 .a-form-view-mode > button {
-    display: none;
+    display: none !important;
 }
 
+.a-form-breadcrumb > i:first-child {
+    display: none !important;
+}
+
+
+.a-form-label-radio {
+    display: block;
+    margin: 0 0 .28571429rem 0;
+    color: rgba(0,0,0,.87);
+    font-size: .92857143em;
+    font-weight: 700;
+    text-transform: none;
+}
+
+.visually-hidden {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}

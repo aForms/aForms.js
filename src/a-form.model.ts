@@ -176,6 +176,11 @@ export interface WizardConfig {
     submitButton?: boolean
 }
 
+export enum FormType {
+    FORM,
+    WIZARD
+}
+
 /**
  * The main form model that will initialize the renderer.
  *
@@ -229,6 +234,8 @@ export class AFormModelClass {
             validateButton: true
         }
     }
+
+    formType: FormType;
 
     constructor(private aForm?: AFormModel, private divElement?: HTMLDivElement, uniqFormId?: string, private libConfig?: LibraryConfig) {
 
@@ -338,6 +345,7 @@ export class AFormModelClass {
     private renderForm(): Promise<AFormModelClass> {
         return new Promise<AFormModelClass>((resolve, reject) => {
             try {
+                this.formType = FormType.FORM
                 $(this.divElement as HTMLDivElement).addClass('ui');
                 const form = document.createElement('form');
                 form.classList.add('ui', 'form');
@@ -381,6 +389,7 @@ export class AFormModelClass {
     private renderWizard(): Promise<AFormModelClass> {
         return new Promise((resolve, reject) => {
             try {
+                this.formType = FormType.WIZARD
                 $(this.divElement as HTMLDivElement).addClass('ui');
                 const form = document.createElement('form');
                 form.classList.add('ui', 'form', 'segment');
@@ -484,6 +493,7 @@ export class AFormModelClass {
                 if (reset) {
                     form.form('reset', label);
                 }
+                console.log(label, values)
                 form.form('set value', label, values);
 
             } else {
@@ -513,7 +523,11 @@ export class AFormModelClass {
     wizardNextPage() {
         const valid = this.formManager.form('validate form')
         if (valid === true) {
-            this.store.dispatch(updateFormData({id: this.uniqFormId, currentPage: this.formWizard?.pageIndex as number + 1}))
+            const currentPageIndex = this.formWizard?.pageIndex as number
+            const nextPageIndex = this.formWizard?.breadcrumb
+                .querySelector(`a[data-index="${currentPageIndex}"]`)?.nextElementSibling?.nextElementSibling?.getAttribute('data-index')
+            this.store.dispatch(updateFormData({id: this.uniqFormId, currentPage: nextPageIndex ? Number(nextPageIndex) : Number(currentPageIndex)}))
+            return nextPageIndex
         } else {
             if (this.gatherErrors()?.length) {
                 this.formLiveAlertRegion.innerText = 'Error found on form, fix them to proceed.'
@@ -523,7 +537,11 @@ export class AFormModelClass {
 
     wizardPreviousPage() {
         if (this.formWizard?.pageIndex as number > 0) {
-            this.store.dispatch(updateFormData({id: this.uniqFormId, currentPage: this.formWizard?.pageIndex as number - 1}))
+            const currentPageIndex = this.formWizard?.pageIndex as number
+            const prevPageIndex = this.formWizard?.breadcrumb
+                .querySelector(`a[data-index="${currentPageIndex}"]`)?.previousElementSibling?.previousElementSibling?.getAttribute('data-index')
+            this.store.dispatch(updateFormData({id: this.uniqFormId, currentPage: prevPageIndex ? Number(prevPageIndex) : Number(currentPageIndex)}))
+            return prevPageIndex
         }
     }
 
@@ -541,6 +559,8 @@ export class AFormModelClass {
 
     notifyChanges(by?: string) {
         const currentState = getFormById(this.store.getState().formData, this.uniqFormId )
+        // Set form data before performing any update
+        this.setFormData(currentState.data)
         this.store.dispatch(updateFormData({id: this.uniqFormId, data: { ...currentState?.data, ...this.getFormData()}}))
     }
 

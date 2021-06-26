@@ -159,7 +159,7 @@ export class SelectBuilder {
 
             switch (dataSource) {
                 case "values":
-                    this.addOptions(values, template, valueProperty, selectElement);
+                    this.addOptions(values, template, 'value', selectElement);
                     break
                 case "json":
                     this.addOptions(values, template, valueProperty, selectElement)
@@ -172,13 +172,15 @@ export class SelectBuilder {
                             this.addOptions(this.selectModel.selectValues ? value?.data?.[this.selectModel.selectValues] : value?.data, template, valueProperty, selectElement)
                         })
                     break
+                default:
+                    this.addOptions(values, "label", 'value', selectElement);
             }
             this.optionsCount = values.length
             this.wrapper?.append(label)
             // Linking tooltip of exist
-            if (this.selectModel?.tooltip) {
-                const toolTip = this.aFormClass.validationHelper.createToolTip(this.selectModel, this.wrapper)
-                this.wrapper.append(toolTip)
+            if (this.selectModel.tooltip) {
+                const {tooltipWrapperDiv, tooltipDiv} = this.aFormClass.validationHelper.createToolTip(this.selectModel, this.wrapper)
+                this.wrapper.append(tooltipWrapperDiv, tooltipDiv)
             }
             this.wrapper?.append(selectElement)
             this.wrapper?.append(liveRegion)
@@ -194,7 +196,9 @@ export class SelectBuilder {
                 allowTab: true,
                 onChange: (v: string, label: string) => {
                     if (!this.internalChanges) {
-                        this.aFormClass.notifyChanges(this.selectModel?.key as string)
+                        this.aFormClass.setFormData(v, this.selectModel?.key as string)
+                        const storeData = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
+                        this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, data: {...storeData, ...{[this.selectModel?.key as string]: v}}}))
                         this.aFormClass.formLiveRegion.innerText = "Selected, " + label
                     }
                     $(this.wrapper).find('.remove.icon')
@@ -273,11 +277,6 @@ export class SelectBuilder {
         $(this.wrapper).hide()
 
         this.errorMutationObserver.observe(this.wrapper, {attributes: true})
-    }
-
-    private detectChanges(e?: any[]) {
-        const formData = this.aFormClass.getFormData()
-        this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, data: formData}))
     }
 
     addValidation() {

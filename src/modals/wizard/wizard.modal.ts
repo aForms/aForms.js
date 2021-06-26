@@ -22,7 +22,7 @@ export class WizardBuilder {
         this.wrapper = document.createElement('div')
         this.wrapper.style.margin = '1rem'
 
-        this.breadcrumb.classList.add('ui', 'breadcrumb')
+        this.breadcrumb.classList.add('ui', 'breadcrumb', 'a-form-breadcrumb')
         this.breadcrumb.setAttribute('aria-label', 'Breadcrumb')
 
         const contentHolder = document.createElement('div')
@@ -52,8 +52,8 @@ export class WizardBuilder {
                 })
                 this.aFormClass.removableSubscribers = []
 
-                this.togglePage(currentState?.currentPage as number)
                 this.pageIndex = currentState?.currentPage as number
+                this.togglePage(currentState?.currentPage as number)
 
                 this.aFormClass.renderer
                     .renderComponent(this.aFormModel.components?.[currentState?.currentPage as number] as AFormModel, contentHolder)
@@ -129,7 +129,7 @@ export class WizardBuilder {
                     prompt: this.aFormClass.errorPrompts,
                     templates: {
                         prompt: (e: string[], t: any) => {
-                             return $("<div class='ui text' aria-describedby/>").addClass(t).html(e[0])
+                             return $("<div class='ui text'/>").addClass(t).html(e[0])
                         }
                     }
                 })
@@ -164,6 +164,7 @@ export class WizardBuilder {
                 a.classList.add('section')
                 a.innerText = value?.title as string
                 a.style.padding = '5px'
+                a.setAttribute('data-index', String(index))
                 a.style.color = 'var(--primary-color)'
                 this.aFormClass.validationHelper.addFocusEvent(a)
                 a.setAttribute('role', 'button')
@@ -186,8 +187,9 @@ export class WizardBuilder {
 
     togglePage(index: number, ev?: MouseEvent, ) {
         this.pageIndex = index;
-        this.wrapper.querySelectorAll('.breadcrumb>a').forEach((aTag, count) => {
-            if (count === index) {
+        console.log(this.pageIndex)
+        this.breadcrumb.querySelectorAll('a').forEach((aTag, count) => {
+            if (Number(aTag.getAttribute('page-index')) === this.pageIndex) {
                 aTag.classList.contains('active') || aTag.classList.add('active');
                 aTag.setAttribute('aria-current', 'location')
             } else {
@@ -200,6 +202,6 @@ export class WizardBuilder {
     }
 
     private cleanBreadcrumb() {
-        this.breadcrumb = document.createElement('nav')
+        this.breadcrumb.innerHTML = ''
     }
 }

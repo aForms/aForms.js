@@ -34,6 +34,7 @@ export class FunctionsHelpers {
         tooltipWrapperDiv.style.marginLeft = '5px'
         tooltipWrapperDiv.setAttribute('role', 'button')
         tooltipWrapperDiv.setAttribute('aria-disabled', 'true')
+
         this.aFormClass.validationHelper.addFocusEvent(tooltipWrapperDiv)
         const infoIcon = document.createElement('i')
         infoIcon.classList.add('info', 'icon', 'circle', 'data-tooltip')
@@ -51,31 +52,28 @@ export class FunctionsHelpers {
         tooltipDiv.setAttribute('role', 'tooltip')
         tooltipDiv.setAttribute('id', tooltipId)
         tooltipDiv.innerText = aFormModel?.tooltip as string ?? ''
-        tooltipWrapperDiv.append(infoIcon, spanItem, tooltipDiv)
+        tooltipWrapperDiv.append(infoIcon, spanItem)
         tooltipWrapperDiv.tabIndex = 0
-        this.initializeTooltip(wrapper, tooltipWrapperDiv)
-        return tooltipWrapperDiv
+        this.initializeTooltip(wrapper, tooltipWrapperDiv, tooltipDiv)
+        return {tooltipWrapperDiv, tooltipDiv}
     }
 
-    initializeTooltip(wrapper: HTMLDivElement|HTMLFieldSetElement, tooltipSpan: HTMLDivElement|HTMLSpanElement) {
-        tooltipSpan.setAttribute('aria-describedby', tooltipSpan?.querySelector('.popup').getAttribute('id') as string)
+    initializeTooltip(wrapper: HTMLDivElement|HTMLFieldSetElement, tooltipSpan: HTMLDivElement|HTMLSpanElement, tooltipDiv: HTMLDivElement) {
+        tooltipSpan.setAttribute('aria-describedby', tooltipDiv?.getAttribute('id') as string)
         $(tooltipSpan)
             .popup({
-                popup: $(tooltipSpan).find('.ui.custom'),
+                popup: $(tooltipDiv),
             })
         $(tooltipSpan)
             .on('focusin', () => {
-                $(wrapper)
-                    .find('.data-tooltip')
+                $(tooltipDiv)
                     .popup('show')
             })
             .on('focusout', () => {
-                $(wrapper)
-                    .find('.data-tooltip').popup('hide')
+                $(tooltipDiv).popup('hide')
             })
             .on('click', () => {
-                $(wrapper)
-                    .find('.data-tooltip').popup('toggle')
+                $(tooltipDiv).popup('toggle')
             })
     }
 
