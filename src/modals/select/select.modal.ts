@@ -179,8 +179,8 @@ export class SelectBuilder {
             this.wrapper?.append(label)
             // Linking tooltip of exist
             if (this.selectModel.tooltip) {
-                const {tooltipWrapperDiv, tooltipDiv} = this.aFormClass.validationHelper.createToolTip(this.selectModel, this.wrapper)
-                this.wrapper.append(tooltipWrapperDiv, tooltipDiv)
+                const tooltipWrapperDiv = this.aFormClass.validationHelper.createToolTip(this.selectModel, this.wrapper)
+                this.wrapper.append(tooltipWrapperDiv)
             }
             this.wrapper?.append(selectElement)
             this.wrapper?.append(liveRegion)
@@ -201,8 +201,14 @@ export class SelectBuilder {
                         this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, data: {...storeData, ...{[this.selectModel?.key as string]: v}}}))
                         this.aFormClass.formLiveRegion.innerText = "Selected, " + label
                     }
-                    $(this.wrapper).find('.remove.icon')
-                        .attr('aria-label', label)
+                    if (this.selectModel.multiple) {
+                        $(this.wrapper).find('.remove.icon')
+                            .hide()
+                        $(this.wrapper).find('a').each(console.log)
+                    } else {
+                        $(this.wrapper).find('.remove.icon')
+                            .attr('aria-label', label)
+                    }
                 },
                 onShow: () => {
                     $(this.wrapper).find('input.search').attr('aria-expanded', 'true')
@@ -256,18 +262,25 @@ export class SelectBuilder {
                     .on('click', () => {
                         $(this.wrapper as HTMLDivElement)?.find('.dropdown').dropdown('show')
                     })
-
-            } else {
-                $(this.wrapper).find('div.ui.dropdown>div.menu').children().each((index, element) => {
-                    const elementId = uuidV4();
-                    element.setAttribute('id', elementId)
-                    element.onclick = () => {
-                        $(this.wrapper).find('div.ui.dropdown>input').each((index1, element1) => {
-                            element1.setAttribute('aria-activedescendant', elementId)
-                        })
-                    }
-                })
             }
+
+            $(this.wrapper).find('div.ui.dropdown>div.menu').children().each((index, element) => {
+                const elementId = uuidV4();
+                element.setAttribute('id', elementId)
+                element.setAttribute('role', "option")
+                element.onclick = () => {
+                    $(this.wrapper).find('div.ui.dropdown>input').each((index1, element1) => {
+                        element1.setAttribute('aria-activedescendant', elementId)
+                    })
+                }
+            })
+
+            const textId = uuidV4()
+            $(this.wrapper).find('div.ui.dropdown>div.text')
+                .attr('id', textId)
+
+            $(this.wrapper).find('div.ui.dropdown>div.search')
+                .attr('aria-describedby', textId)
 
             if (this.selectModel.validate?.required) {
                 selectElement.setAttribute('aria-required', 'true')

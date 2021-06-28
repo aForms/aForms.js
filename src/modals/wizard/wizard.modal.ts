@@ -187,7 +187,6 @@ export class WizardBuilder {
 
     togglePage(index: number, ev?: MouseEvent, ) {
         this.pageIndex = index;
-        console.log(this.pageIndex)
         this.breadcrumb.querySelectorAll('a').forEach((aTag, count) => {
             if (Number(aTag.getAttribute('page-index')) === this.pageIndex) {
                 aTag.classList.contains('active') || aTag.classList.add('active');

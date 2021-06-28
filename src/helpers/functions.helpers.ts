@@ -1,6 +1,6 @@
 import {AFormModel, AFormModelClass} from "../a-form.model";
 // @ts-ignore
-import { v4 as uuidV4 } from 'uuid';
+import {v4 as uuidV4} from 'uuid';
 import {Observable, Subject} from "rxjs";
 import {ConditionalHelper} from "./conditional.helper";
 import {getFormById} from "../store/reducers/form-data.reducer";
@@ -20,7 +20,7 @@ export class FunctionsHelpers {
         // @ts-ignore
         $.fn.form.settings.rules.checkValidation = (value, logic) => {
             if (logic) {
-                const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
+                const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
                 const validation = new ConditionalHelper().checkCondition(JSON.parse(logic), data)
                 return validation === true
             }
@@ -28,7 +28,7 @@ export class FunctionsHelpers {
         };
     }
 
-    createToolTip(aFormModel: AFormModel, wrapper: HTMLDivElement|HTMLFieldSetElement) {
+    createToolTip(aFormModel: AFormModel, wrapper: HTMLDivElement | HTMLFieldSetElement) {
         const tooltipId = uuidV4()
         const tooltipWrapperDiv = document.createElement('span')
         tooltipWrapperDiv.style.marginLeft = '5px'
@@ -52,28 +52,28 @@ export class FunctionsHelpers {
         tooltipDiv.setAttribute('role', 'tooltip')
         tooltipDiv.setAttribute('id', tooltipId)
         tooltipDiv.innerText = aFormModel?.tooltip as string ?? ''
-        tooltipWrapperDiv.append(infoIcon, spanItem)
+        tooltipWrapperDiv.append(infoIcon, spanItem, tooltipDiv)
         tooltipWrapperDiv.tabIndex = 0
-        this.initializeTooltip(wrapper, tooltipWrapperDiv, tooltipDiv)
-        return {tooltipWrapperDiv, tooltipDiv}
+        return tooltipWrapperDiv
     }
 
-    initializeTooltip(wrapper: HTMLDivElement|HTMLFieldSetElement, tooltipSpan: HTMLDivElement|HTMLSpanElement, tooltipDiv: HTMLDivElement) {
-        tooltipSpan.setAttribute('aria-describedby', tooltipDiv?.getAttribute('id') as string)
+
+    initializeTooltip(wrapper: HTMLDivElement | HTMLFieldSetElement, tooltipSpan: HTMLDivElement | HTMLSpanElement) {
+        tooltipSpan.setAttribute('aria-describedby', tooltipSpan?.getAttribute('id') as string)
         $(tooltipSpan)
             .popup({
-                popup: $(tooltipDiv),
+                popup: $(tooltipSpan.querySelector('.popup.custom')),
             })
         $(tooltipSpan)
-            .on('focusin', () => {
-                $(tooltipDiv)
+            .on('focus', () => {
+                $(tooltipSpan)
                     .popup('show')
             })
-            .on('focusout', () => {
-                $(tooltipDiv).popup('hide')
-            })
             .on('click', () => {
-                $(tooltipDiv).popup('toggle')
+                $(tooltipSpan).popup('toggle')
+            })
+            .on('blur', () => {
+                $(tooltipSpan).popup('hide')
             })
     }
 
@@ -90,8 +90,8 @@ export class FunctionsHelpers {
         // })
     }
 
-    addMutationOn(element: any){
-        this.mutationObserver.observe(element, { attributes: true })
+    addMutationOn(element: any) {
+        this.mutationObserver.observe(element, {attributes: true})
     }
 
     disconnectMutationChanges() {
@@ -123,7 +123,7 @@ export class FunctionsHelpers {
             return {
                 type: validation,
                 prompt: (value: any) => {
-                    const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
+                    const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
                     const validation = new ConditionalHelper().checkCondition(conditional, data)
                     if (aFormModel.customError) {
                         return aFormModel.customError
@@ -139,7 +139,7 @@ export class FunctionsHelpers {
 
     calculatedValue(aFormModel: AFormModel) {
         if (aFormModel.calculateValue) {
-            const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
+            const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
             const value = new ConditionalHelper().checkCondition(aFormModel.calculateValue, data)
             if (value) {
                 if (aFormModel.multiple) {
@@ -150,7 +150,11 @@ export class FunctionsHelpers {
                     }
                 }
                 this.aFormClass.formManager.form('set value', aFormModel.key, value)
-           }
+                return true
+            }
+            return false
+        } else {
+            return false
         }
     }
 

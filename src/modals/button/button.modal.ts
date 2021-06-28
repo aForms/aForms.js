@@ -21,10 +21,9 @@ export class ButtonBuilder {
 
     build(isWizard: FormType): HTMLDivElement {
         const buttonWrapper = document.createElement('div')
-        console.log(isWizard)
-        if (isWizard === FormType.WIZARD) {
-            return buttonWrapper;
-        }
+        // if (isWizard === FormType.WIZARD) {
+        //     return buttonWrapper;
+        // }
         buttonWrapper.style.display = 'inline'
         buttonWrapper.style.padding = '5px'
         const buttonDiv = document.createElement('button');
@@ -37,7 +36,7 @@ export class ButtonBuilder {
             buttonWrapper.style.outlineColor = "unset"
         })
         buttonDiv.innerText = (this.buttonModal.label as string)
-        buttonDiv.classList.add('ui', 'button')
+        buttonDiv.classList.add('ui', 'button', 'a-form-button')
         buttonDiv.type = 'button'
         buttonDiv.setAttribute('aria-label', (this.buttonModal.label as string))
         buttonDiv.tabIndex = this.buttonModal?.tabindex ? Number(this.buttonModal?.tabindex) : 0

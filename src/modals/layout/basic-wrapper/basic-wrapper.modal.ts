@@ -1,7 +1,5 @@
 import {AFormModel, AFormModelClass} from "../../../a-form.model";
-export interface BasicWrapperModal {
-
-}
+export interface BasicWrapperModal { }
 
 export class BasicWrapperBuilder {
 

@@ -37,8 +37,8 @@ export class TextareaBuilder {
         const label = document.createElement('label');
         label.innerText = (this.textComponent.label as string)
         if (this.textComponent.tooltip) {
-            const {tooltipWrapperDiv, tooltipDiv} = this.aFormClass.validationHelper.createToolTip(this.textComponent, wrapper)
-            wrapper.append(tooltipWrapperDiv, tooltipDiv)
+            const tooltipWrapperDiv = this.aFormClass.validationHelper.createToolTip(this.textComponent, wrapper)
+            wrapper.append(tooltipWrapperDiv)
         }
         wrapper.append(label)
         const textarea = document.createElement('textarea')

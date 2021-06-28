@@ -421,16 +421,6 @@ export class AFormModelClass {
                 this.divElement?.append(form)
                 this.divElement?.append(this.formLiveRegion)
 
-                this.formLiveAlertRegion.setAttribute('role', 'status')
-                this.formLiveAlertRegion.setAttribute('aria-live', 'assertive')
-                this.formLiveAlertRegion.classList.add('visually-hidden')
-                this.formLiveAlertRegion.style.position = 'absolute'
-                this.formLiveAlertRegion.style.left = '-10000px'
-                this.formLiveAlertRegion.style.width = '1px'
-                this.formLiveAlertRegion.style.height = '1px'
-                this.formLiveAlertRegion.style.overflow = 'hidden'
-                this.divElement?.append(this.formLiveAlertRegion)
-
                 // An async dispatch to trigger initial page load.
                 const asyncDispatch = (dispatch: (arg0: { payload: FormData; type: string; }) => void, getState: () => any) => {
                     dispatch(updateFormData({id: this.uniqFormId, currentPage: 0}))
@@ -493,7 +483,6 @@ export class AFormModelClass {
                 if (reset) {
                     form.form('reset', label);
                 }
-                console.log(label, values)
                 form.form('set value', label, values);
 
             } else {
@@ -505,10 +494,18 @@ export class AFormModelClass {
         }
     }
 
-    insertStoreData(values?: any) {
+    insertStoreData(values?: any, update?: boolean) {
+        let val = {}
+        if (update) {
+            const getCurrentFormData = getFormById(this.store.getState().formData, this.uniqFormId)?.data
+            console.log(getCurrentFormData)
+            console.log(values)
+            val = { ...getCurrentFormData, ...values }
+        }
+        console.log(val)
         // An async dispatch to trigger initial page load.
         const asyncDispatch = (dispatch: (arg0: { payload: FormData; type: string; }) => void, getState: () => any) => {
-            dispatch(updateFormData({id: this.uniqFormId, data: values}))
+            dispatch(updateFormData({id: this.uniqFormId, data: val}))
         }
         // @ts-ignore
         this.store.dispatch(asyncDispatch)

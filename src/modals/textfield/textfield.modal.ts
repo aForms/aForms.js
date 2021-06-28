@@ -43,7 +43,7 @@ export class TextfieldBuilder {
             this.wrapper?.querySelector('.ui.icon.input')?.classList.add('loading')
             this.isVisible = new ConditionalHelper().checkCondition(this.textComponent?.conditional, data)
             if (this.wrapper) {
-                this.processConditionalLogic()
+                this.processConditionalLogic(true)
             }
             this.wrapper?.querySelector('.ui.icon.input')?.classList.remove('loading')
         })
@@ -82,8 +82,8 @@ export class TextfieldBuilder {
         this.aFormClass.validationHelper.addFocusEvent(this.wrapper)
         this.wrapper.append(label)
         if (this.textComponent.tooltip) {
-            const {tooltipWrapperDiv, tooltipDiv} = this.aFormClass.validationHelper.createToolTip(this.textComponent, this.wrapper)
-            this.wrapper.append(tooltipWrapperDiv, tooltipDiv)
+            const tooltipWrapperDiv = this.aFormClass.validationHelper.createToolTip(this.textComponent, this.wrapper)
+            this.wrapper.append(tooltipWrapperDiv)
         }
         const iconInputWrapper = document.createElement('div')
         iconInputWrapper.classList.add('ui', 'icon', 'input')
@@ -96,7 +96,7 @@ export class TextfieldBuilder {
         }
         this.textInputElement.onchange = () => this.aFormClass.notifyChanges(this.textComponent?.key as string);
         this.textInputElement.tabIndex = this.textComponent?.tabindex ? Number(this.textComponent?.tabindex) : 0
-        fromEvent(this.textInputElement, 'input').pipe(debounceTime(1000)).subscribe(value => {
+        fromEvent(this.textInputElement, 'input').subscribe(value => {
             if (this.wrapper.classList.contains('error')) {
                 this.aFormClass.formLiveRegion.innerText = this.textComponent.label + ' is required'
             }
@@ -104,13 +104,13 @@ export class TextfieldBuilder {
             const storeData = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
             this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, data: {...storeData, ...{[this.textComponent?.key as string]: this.textInputElement.value}}}))
         })
+
         const icon = document.createElement('i')
         icon.classList.add('icon')
         iconInputWrapper.append(this.textInputElement)
         iconInputWrapper.append(icon)
         this.wrapper.append(iconInputWrapper)
         $(this.wrapper).hide()
-
         this.errorMutationObserver.observe(this.wrapper, {attributes: true})
     }
 
@@ -126,7 +126,7 @@ export class TextfieldBuilder {
         $('#' + this.aFormClass.uniqFormId).form('remove field', this.textComponent.key)
     }
 
-    processConditionalLogic() {
+    processConditionalLogic(update?: boolean) {
         const data = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId )?.data
 
         if (this.textComponent.hidden) {
@@ -140,6 +140,9 @@ export class TextfieldBuilder {
                         this.aFormClass.formManager.form('set value', this.textComponent.key, this.textComponent.defaultValue)
                     }
                     this.aFormClass.validationHelper.calculatedValue(this.textComponent)
+                    if (!update) {
+                        this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, data: {...data, ...{[this.textComponent?.key as string]: this.textInputElement.value}}}))
+                    }
                 }
             } else {
                 this.textInputElement.value = ""
@@ -164,6 +167,9 @@ export class TextfieldBuilder {
                 }
                 this.aFormClass.validationHelper.calculatedValue(this.textComponent)
                 this.addValidation()
+                if (!update) {
+                    this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, data: {...data, ...{[this.textComponent?.key as string]: this.textInputElement.value}}}))
+                }
                 $(this.wrapper).fadeIn()
             }
         }

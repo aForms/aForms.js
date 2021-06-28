@@ -6,6 +6,7 @@ import {ClassesHelper} from "../../helpers/classes.helper";
 import { v4 as uuidV4 } from 'uuid';
 import {getFormById, updateFormData} from "../../store/reducers/form-data.reducer";
 import {ConditionalHelper} from "../../helpers/conditional.helper";
+import {MutationHelper} from "../../helpers/mutation.helper";
 
 declare var $: JQueryStatic;
 
@@ -26,6 +27,8 @@ export class RadioBuilder {
     isVisible = true
 
     showViewMode = false
+
+    errorMutationObserver = new MutationHelper().errorMutationObserver
 
     constructor(private radioModal: AFormModel, private aFormClass: AFormModelClass, private formComponent?: HTMLDivElement) {
 
@@ -74,21 +77,11 @@ export class RadioBuilder {
                 label.setAttribute('id', uuid);
                 label.innerText = this.radioModal?.label as string
                 this.wrapper.append(label)
-                if (this.radioModal?.validate?.required) {
-                    const span = document.createElement('span')
-                    span.innerText = `this field is required`
-                    span.classList.add('visually-hidden')
-                    span.style.position = 'absolute'
-                    span.style.left = '-10000px'
-                    span.style.width = '1px'
-                    span.style.height = '1px'
-                    span.style.overflow = 'hidden'
-                    label.append(span)
-                }
             }
             if (this.radioModal.tooltip) {
-                const {tooltipWrapperDiv, tooltipDiv} = this.aFormClass.validationHelper.createToolTip(this.radioModal, this.wrapper)
-                this.wrapper.append(tooltipWrapperDiv, tooltipDiv)
+                const tooltipWrapperDiv = this.aFormClass.validationHelper.createToolTip(this.radioModal, this.wrapper)
+                this.wrapper.append(tooltipWrapperDiv)
+                this.aFormClass.validationHelper.initializeTooltip(this.wrapper, tooltipWrapperDiv)
             }
             this.addRadioFields();
             $(this.wrapper)
@@ -101,6 +94,11 @@ export class RadioBuilder {
                         this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, data: {...storeData, ...{[this.radioModal?.key as string]: value}}}))
                     }
                 })
+            if (this.radioModal?.validate?.required) {
+                this.wrapper.setAttribute('aria-required', 'true')
+            }
+
+            this.errorMutationObserver.observe(this.wrapper, {attributes: true})
 
         }
 
@@ -168,7 +166,6 @@ export class RadioBuilder {
         const validation = this.aFormClass.validationHelper.prepareValidation(this.radioModal)
         if (this.radioModal.validate?.required) {
             this.wrapper?.classList.add('required');
-            this.wrapper?.setAttribute('aria-required', 'true')
         }
         this.aFormClass.formManager.form('add rule', this.radioModal.key, { on: 'blur', rules: validation })
     }
