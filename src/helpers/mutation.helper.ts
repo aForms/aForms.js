@@ -1,5 +1,23 @@
+import {Component} from "../config/component.enum";
 
 export class MutationHelper {
+
+    errorRadioMutation = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            const { target } = mutation;
+            if (mutation.attributeName === 'class') {
+                // @ts-ignore
+                const currentState = mutation.target.classList.contains('error');
+                if (currentState) {
+                    // @ts-ignore
+                    mutation.target?.setAttribute?.('aria-invalid', 'true');
+                } else {
+                    // @ts-ignore
+                    mutation.target?.setAttribute?.('aria-invalid', 'false');
+                }
+            }
+        });
+    });
 
     errorMutationObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {

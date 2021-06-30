@@ -84,6 +84,7 @@ export class TextfieldBuilder {
         if (this.textComponent.tooltip) {
             const tooltipWrapperDiv = this.aFormClass.validationHelper.createToolTip(this.textComponent, this.wrapper)
             this.wrapper.append(tooltipWrapperDiv)
+            this.aFormClass.validationHelper.initializeTooltip(this.wrapper, tooltipWrapperDiv)
         }
         const iconInputWrapper = document.createElement('div')
         iconInputWrapper.classList.add('ui', 'icon', 'input')

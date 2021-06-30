@@ -2,7 +2,6 @@ import {TextCommonModal} from "../text-common/text-common.modal";
 import {AFormModel, AFormModelClass} from "../../a-form.model";
 import {ClassesHelper} from "../../helpers/classes.helper";
 import {DefaultsHelper} from "../../helpers/defaults.helper";
-import {FunctionsHelpers} from "../../helpers/functions.helpers";
 
 export interface TextareaModal extends TextCommonModal {
     autoExpand?: boolean
@@ -39,6 +38,7 @@ export class TextareaBuilder {
         if (this.textComponent.tooltip) {
             const tooltipWrapperDiv = this.aFormClass.validationHelper.createToolTip(this.textComponent, wrapper)
             wrapper.append(tooltipWrapperDiv)
+            this.aFormClass.validationHelper.initializeTooltip(wrapper, tooltipWrapperDiv)
         }
         wrapper.append(label)
         const textarea = document.createElement('textarea')

@@ -181,6 +181,7 @@ export class SelectBuilder {
             if (this.selectModel.tooltip) {
                 const tooltipWrapperDiv = this.aFormClass.validationHelper.createToolTip(this.selectModel, this.wrapper)
                 this.wrapper.append(tooltipWrapperDiv)
+                this.aFormClass.validationHelper.initializeTooltip(this.wrapper, tooltipWrapperDiv)
             }
             this.wrapper?.append(selectElement)
             this.wrapper?.append(liveRegion)
@@ -204,10 +205,25 @@ export class SelectBuilder {
                     if (this.selectModel.multiple) {
                         $(this.wrapper).find('.remove.icon')
                             .hide()
-                        $(this.wrapper).find('a').each(console.log)
+                        $(this.wrapper).find('a').each((index, element) => {
+                            element.querySelector('i').setAttribute('tabIndex', '0')
+                            element.querySelector('i').setAttribute('aria-label', 'remove ' + element.getAttribute('data-value'))
+                            element.querySelector('i').addEventListener('keypress', (e) => {
+                                let keycode = (e.keyCode ? e.keyCode : e.which);
+                                if(keycode === 13){
+                                    $(this.wrapper).find('.remove.icon').click()
+                                }
+                            })
+                        })
                     } else {
                         $(this.wrapper).find('.remove.icon')
-                            .attr('aria-label', label)
+                            .attr('aria-label', 'remove ' + label)
+                            .on('keypress',     (e) => {
+                                let keycode = (e.keyCode ? e.keyCode : e.which);
+                                if(keycode === 13){
+                                    $(this.wrapper).find('.remove.icon').click()
+                                }
+                            })
                     }
                 },
                 onShow: () => {
@@ -279,7 +295,7 @@ export class SelectBuilder {
             $(this.wrapper).find('div.ui.dropdown>div.text')
                 .attr('id', textId)
 
-            $(this.wrapper).find('div.ui.dropdown>div.search')
+            $(this.wrapper).find('div.ui.dropdown>input.search')
                 .attr('aria-describedby', textId)
 
             if (this.selectModel.validate?.required) {
@@ -321,7 +337,7 @@ export class SelectBuilder {
 
         if (this.selectModel.hidden) {
             const conditional = this.aFormClass.conditionalHelper.checkJustCondition(this.selectModel?.conditional?.json, data)
-            if (conditional) {
+            if (conditional  || this.selectModel?.conditional?.json === undefined || this.selectModel?.conditional?.json === null) {
                 // Clear on hide to ensure value gets cleared when hidden
                 if (this.selectModel.clearOnHide) {
                     $(this.wrapper).find('.dropdown').dropdown('clear')

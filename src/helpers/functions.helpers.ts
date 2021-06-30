@@ -59,7 +59,7 @@ export class FunctionsHelpers {
 
 
     initializeTooltip(wrapper: HTMLDivElement | HTMLFieldSetElement, tooltipSpan: HTMLDivElement | HTMLSpanElement) {
-        tooltipSpan.setAttribute('aria-describedby', tooltipSpan?.getAttribute('id') as string)
+        tooltipSpan.setAttribute('aria-describedby', tooltipSpan?.querySelector('.popup.custom')?.getAttribute('id') as string)
         $(tooltipSpan)
             .popup({
                 popup: $(tooltipSpan.querySelector('.popup.custom')),

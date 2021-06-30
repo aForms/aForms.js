@@ -3,10 +3,11 @@ import {AFormModel, AFormModelClass, Mode} from "../../a-form.model";
 import {ClassesHelper} from "../../helpers/classes.helper";
 
 // @ts-ignore
-import { v4 as uuidV4 } from 'uuid';
+import {v4 as uuidV4} from 'uuid';
 import {getFormById, updateFormData} from "../../store/reducers/form-data.reducer";
 import {ConditionalHelper} from "../../helpers/conditional.helper";
 import {MutationHelper} from "../../helpers/mutation.helper";
+import {Component} from "../../config/component.enum";
 
 declare var $: JQueryStatic;
 
@@ -28,7 +29,7 @@ export class RadioBuilder {
 
     showViewMode = false
 
-    errorMutationObserver = new MutationHelper().errorMutationObserver
+    errorMutationObserver = new MutationHelper().errorRadioMutation
 
     constructor(private radioModal: AFormModel, private aFormClass: AFormModelClass, private formComponent?: HTMLDivElement) {
 
@@ -179,7 +180,7 @@ export class RadioBuilder {
 
         if (this.radioModal.hidden) {
             const conditional = this.aFormClass.conditionalHelper.checkJustCondition(this.radioModal?.conditional?.json, data)
-            if (conditional) {
+            if (conditional  || this.radioModal?.conditional?.json === undefined || this.radioModal?.conditional?.json === null) {
                 // Clear on hide to ensure value gets cleared when hidden
                 if (this.radioModal.clearOnHide) {
                     $(this.wrapper)
