@@ -52,22 +52,33 @@ export class FunctionsHelpers {
         tooltipDiv.setAttribute('role', 'tooltip')
         tooltipDiv.setAttribute('id', tooltipId)
         tooltipDiv.innerText = aFormModel?.tooltip as string ?? ''
-        tooltipWrapperDiv.append(infoIcon, spanItem, tooltipDiv)
+        tooltipWrapperDiv.append(infoIcon, spanItem)
+        wrapper.append(tooltipDiv)
         tooltipWrapperDiv.tabIndex = 0
         return tooltipWrapperDiv
     }
 
 
     initializeTooltip(wrapper: HTMLDivElement | HTMLFieldSetElement, tooltipSpan: HTMLDivElement | HTMLSpanElement) {
-        tooltipSpan.setAttribute('aria-describedby', tooltipSpan?.querySelector('.popup.custom')?.getAttribute('id') as string)
+        tooltipSpan.setAttribute('aria-describedby', wrapper?.querySelector('.popup.custom')?.getAttribute('id') as string)
         $(tooltipSpan)
             .popup({
-                popup: $(tooltipSpan.querySelector('.popup.custom')),
+                popup: $(wrapper.querySelector('.popup.custom')),
             })
         $(tooltipSpan)
             .on('focus', () => {
                 $(tooltipSpan)
                     .popup('show')
+            })
+            .on('keyup', (e) => {
+                if(e.key === "Escape"){
+                    $(tooltipSpan)
+                        .popup('hide')
+                }
+                if(e.key === "Enter"){
+                    $(tooltipSpan)
+                        .popup('show')
+                }
             })
             .on('click', () => {
                 $(tooltipSpan).popup('toggle')

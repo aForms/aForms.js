@@ -78,7 +78,7 @@ export class SelectBuilder {
 
     isVisible = true
 
-    errorMutationObserver = new MutationHelper().errorMutationObserver
+    mutationHelper = new MutationHelper()
 
     constructor(private selectModel: AFormModel, private aFormClass: AFormModelClass, container?: HTMLDivElement) {
         if (container) {
@@ -193,37 +193,46 @@ export class SelectBuilder {
 
             $(this.wrapper).find('.dropdown').dropdown({
                 clearable: true,
-                selectOnKeydown: false,
-                allowTab: true,
-                onChange: (v: string, label: string) => {
-                    if (!this.internalChanges) {
-                        this.aFormClass.setFormData(v, this.selectModel?.key as string)
-                        const storeData = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
-                        this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, data: {...storeData, ...{[this.selectModel?.key as string]: v}}}))
-                        this.aFormClass.formLiveRegion.innerText = "Selected, " + label
-                    }
+                forceSelection: false,
+                showOnFocus: true,
+                action: (text, value, element) => {
+                    const dropDownElement = this.wrapper.querySelector('.ui.dropdown')
                     if (this.selectModel.multiple) {
-                        $(this.wrapper).find('.remove.icon')
-                            .hide()
-                        $(this.wrapper).find('a').each((index, element) => {
-                            element.querySelector('i').setAttribute('tabIndex', '0')
-                            element.querySelector('i').setAttribute('aria-label', 'remove ' + element.getAttribute('data-value'))
-                            element.querySelector('i').addEventListener('keypress', (e) => {
-                                let keycode = (e.keyCode ? e.keyCode : e.which);
-                                if(keycode === 13){
-                                    $(this.wrapper).find('.remove.icon').click()
-                                }
-                            })
-                        })
+                        const currentValues = $(this.wrapper).find('.dropdown').dropdown('get value')
+                        const corrected = (currentValues as string[]).filter((value1, index) => value1 !== "")
+                        if (!corrected.includes(value)) {
+                            const anchorElem = document.createElement('a');
+                            anchorElem.classList.add('ui', 'label', 'transition', 'visible');
+                            anchorElem.setAttribute('data-value', value);
+                            anchorElem.setAttribute('data-label', text);
+                            const iTag =  document.createElement('i')
+                            anchorElem.innerText = text
+                            iTag.classList.add('delete', 'icon')
+                            anchorElem.append(iTag)
+                            dropDownElement.prepend(anchorElem)
+                            corrected.push(value)
+                            this.aFormClass.setFormData(corrected, this.selectModel?.key as string);
+                            const storeData = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
+                            this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId,
+                                data: {...storeData, ...{[this.selectModel?.key as string]: corrected}}}))
+                        }
                     } else {
-                        $(this.wrapper).find('.remove.icon')
-                            .attr('aria-label', 'remove ' + label)
-                            .on('keypress',     (e) => {
-                                let keycode = (e.keyCode ? e.keyCode : e.which);
-                                if(keycode === 13){
-                                    $(this.wrapper).find('.remove.icon').click()
-                                }
-                            })
+                        const textElement = dropDownElement.querySelector('.text');
+                        if (textElement) {
+                            textElement.classList.remove('default')
+                            textElement.innerHTML = text;
+                        } else {
+                            const textDiv = document.createElement('div')
+                            textDiv.classList.add('text')
+                            textDiv.innerText = text
+
+                            dropDownElement.append(textDiv)
+                        }
+                        this.aFormClass.setFormData(value, this.selectModel?.key as string);
+                        const storeData = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
+                        this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId,
+                            data: {...storeData, ...{[this.selectModel?.key as string]: value}}}))
+                        $(this.wrapper).find('.dropdown').dropdown('toggle')
                     }
                 },
                 onShow: () => {
@@ -233,19 +242,18 @@ export class SelectBuilder {
                     $(this.wrapper).find('input.search').attr('aria-expanded', 'false')
                     this.aFormClass.formManager.form('is valid', this.selectModel.key, true)
                 },
-                showOnFocus: false,
                 onNoResults: () => {
                     liveRegion.innerText = "No result found, please try narrowing your search."
                 }
             })
 
-            fromEvent($(this.wrapper).find('input.search'), 'keydown')
-                .pipe(debounceTime(1000)).subscribe(value => {
-                if (this.wrapper) {
-                    const selection = $(this.wrapper).find('.menu')?.find('.selected')
-                    liveRegion.innerText = `${selection?.text()}`
-                }
-            })
+            // fromEvent($(this.wrapper).find('input.search'), 'keydown')
+            //     .pipe(debounceTime(1000)).subscribe(value => {
+            //     if (this.wrapper) {
+            //         const selection = $(this.wrapper).find('.menu')?.find('.selected')
+            //         liveRegion.innerText = `${selection?.text()}`
+            //     }
+            // })
 
 
             $(this.wrapper).find('input.search')
@@ -265,30 +273,28 @@ export class SelectBuilder {
                         liveRegion.innerHTML = `${length} options available`
                     }
                 })
-            $(this.wrapper).find('.dropdown.icon')
-                .attr('tabIndex', '0')
-            $(this.wrapper).find('.remove.icon')
-                .attr('tabIndex', '0')
             $(this.wrapper).find('div.menu')
                 .attr('id', menuId)
                 .attr('role', 'listbox')
 
-            if (this.selectModel.multiple) {
-                $(this.wrapper).find('div.ui.dropdown')
-                    .on('click', () => {
-                        $(this.wrapper as HTMLDivElement)?.find('.dropdown').dropdown('show')
-                    })
-            }
+            $(this.wrapper).find('.remove.icon')
+                .on('click', () => {
+                    const textInd = this.wrapper.querySelector('.ui.dropdown').querySelector('.text')
+                    if (textInd) {
+                        textInd.innerHTML = ''
+                    }
+                })
+
+            const menuDiv = this.wrapper.querySelector('div>.menu')
+            this.mutationHelper.addActiveDescendOnSelectionMutationObserver.observe(menuDiv, {
+                attributes: true,
+                subtree: true
+            })
 
             $(this.wrapper).find('div.ui.dropdown>div.menu').children().each((index, element) => {
                 const elementId = uuidV4();
                 element.setAttribute('id', elementId)
                 element.setAttribute('role', "option")
-                element.onclick = () => {
-                    $(this.wrapper).find('div.ui.dropdown>input').each((index1, element1) => {
-                        element1.setAttribute('aria-activedescendant', elementId)
-                    })
-                }
             })
 
             const textId = uuidV4()
@@ -302,10 +308,15 @@ export class SelectBuilder {
                 selectElement.setAttribute('aria-required', 'true')
                 this.wrapper.querySelectorAll('input')?.forEach(value => value.setAttribute('aria-required', 'true'))
             }
+
+            if (data[this.selectModel.key]) {
+                const dataTag = this.wrapper.querySelector('.ui.dropdown')?.querySelector('.menu')?.querySelector(`[data-value='${data[this.selectModel.key]}']`)
+                this.wrapper.querySelector('.ui.dropdown').querySelector('.text').innerHTML = dataTag?.getAttribute('data-text')
+            }
         }
         $(this.wrapper).hide()
 
-        this.errorMutationObserver.observe(this.wrapper, {attributes: true})
+        this.mutationHelper.errorMutationObserver.observe(this.wrapper, {attributes: true})
     }
 
     addValidation() {
