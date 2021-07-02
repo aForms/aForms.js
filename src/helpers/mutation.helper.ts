@@ -47,8 +47,8 @@ export class MutationHelper {
                 // @ts-ignore
                 const currentState = mutation.target.classList.contains('selected');
                 if (currentState) {
-                    mutation.target?.parentElement?.parentElement?.querySelectorAll('input')
-                        ?.forEach(value => value.setAttribute?.('aria-activedescendant', (mutation.target as Element).getAttribute('id')))
+                    mutation.target?.parentElement?.parentElement?.querySelector('input.search')
+                        .setAttribute?.('aria-activedescendant', (mutation.target as Element).getAttribute('id'))
                 }
             }
         });

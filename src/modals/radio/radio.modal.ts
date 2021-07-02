@@ -85,16 +85,7 @@ export class RadioBuilder {
                 this.aFormClass.validationHelper.initializeTooltip(this.wrapper, tooltipWrapperDiv)
             }
             this.addRadioFields();
-            $(this.wrapper)
-                .find('.checkbox')
-                .checkbox({
-                    onChange: () => {
-                        const value = $(this.wrapper).find('.checkbox.checked > input')?.val()
-                        this.aFormClass.setFormData(value, this.radioModal?.key as string)
-                        const storeData = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
-                        this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, data: {...storeData, ...{[this.radioModal?.key as string]: value}}}))
-                    }
-                })
+            $(this.wrapper).find('.checkbox').checkbox()
             if (this.radioModal?.validate?.required) {
                 this.wrapper.setAttribute('aria-required', 'true')
             }
@@ -155,6 +146,13 @@ export class RadioBuilder {
             radioLabel.setAttribute('for', uuid)
             radioDiv.append(radioInput)
             radioDiv.append(radioLabel)
+            radioDiv.onchange = (e) => {
+                const value = (e.target as HTMLInputElement).defaultValue
+                this.aFormClass.formManager.form('set value', this.radioModal.key, value)
+                const storeData = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
+                this.aFormClass.store.dispatch(
+                    updateFormData({id: this.aFormClass.uniqFormId, data: {...storeData, ...{[this.radioModal?.key as string]: value}}}))
+            }
             wrapperDiv?.append(radioDiv)
         })
         if (this.radioModal?.inline) {
@@ -183,9 +181,10 @@ export class RadioBuilder {
             if (conditional  || this.radioModal?.conditional?.json === undefined || this.radioModal?.conditional?.json === null) {
                 // Clear on hide to ensure value gets cleared when hidden
                 if (this.radioModal.clearOnHide) {
-                    $(this.wrapper)
-                        .find('.checkbox')
-                        .checkbox('uncheck')                } else {
+                    // $(this.wrapper)
+                    //     .find('.checkbox')
+                    //     .checkbox('uncheck')
+                } else {
                     this.aFormClass.validationHelper.calculatedValue(this.radioModal)
                 }
             }
@@ -194,9 +193,9 @@ export class RadioBuilder {
             if (!this.isVisible) {
                 // Clear on hide to ensure value gets cleared when hidden
                 if (this.radioModal.clearOnHide) {
-                    $(this.wrapper)
-                        .find('.checkbox')
-                        .checkbox('uncheck')
+                    // $(this.wrapper)
+                    //     .find('.checkbox')
+                    //     .checkbox('uncheck')
                 } else {
                     if (this.radioModal.defaultValue) {
                         this.aFormClass.formManager.form('set value', this.radioModal.key, this.radioModal.defaultValue)

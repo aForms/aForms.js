@@ -118,18 +118,18 @@ export class SelectBuilder {
         const menuId = uuidV4()
         const inputSearch = uuidV4()
 
-        const controllerLink = uuidV4();
-        // Live region to notify screen reader about changes
-        const liveRegion = document.createElement('div')
-        liveRegion.setAttribute('role', 'status')
-        liveRegion.setAttribute('aria-atomic', 'true')
-        liveRegion.setAttribute('aria-live', 'polite')
-        liveRegion.classList.add('visually-hidden')
-        liveRegion.style.position = 'absolute'
-        liveRegion.style.left = '-10000px'
-        liveRegion.style.width = '1px'
-        liveRegion.style.height = '1px'
-        liveRegion.style.overflow = 'hidden'
+        // const controllerLink = uuidV4();
+        // // Live region to notify screen reader about changes
+        // const liveRegion = document.createElement('div')
+        // liveRegion.setAttribute('role', 'status')
+        // liveRegion.setAttribute('aria-atomic', 'true')
+        // liveRegion.setAttribute('aria-live', 'polite')
+        // liveRegion.classList.add('visually-hidden')
+        // liveRegion.style.position = 'absolute'
+        // liveRegion.style.left = '-10000px'
+        // liveRegion.style.width = '1px'
+        // liveRegion.style.height = '1px'
+        // liveRegion.style.overflow = 'hidden'
 
         if (this.wrapper) {
             if (options) {
@@ -146,7 +146,9 @@ export class SelectBuilder {
 
             const dataSource: string = this.selectModel?.dataSrc as string
             const valueProperty: string = this.selectModel?.valueProperty as string
-            const template: string = this.selectModel?.template?.replace?.(/<span>{{ item.|}}<\/span>/g, "")?.trim() as string
+            const template: string = this.selectModel?.template
+                ?.replace?.(/<span>{{ item.|}}<\/span>/g, "")
+                ?.trim() as string
             const values: any[] = Object(this.selectModel?.data)[dataSource ?? 'values'];
 
             const selectElement = document.createElement('select')
@@ -169,7 +171,8 @@ export class SelectBuilder {
                     this.aFormClass.axiosInstance
                         .get(proxyRequest)
                         .then(value => {
-                            this.addOptions(this.selectModel.selectValues ? value?.data?.[this.selectModel.selectValues] : value?.data, template, valueProperty, selectElement)
+                            this.addOptions(this.selectModel.selectValues ? value?.data
+                                ?.[this.selectModel.selectValues] : value?.data, template, valueProperty, selectElement)
                         })
                     break
                 default:
@@ -183,8 +186,8 @@ export class SelectBuilder {
                 this.wrapper.append(tooltipWrapperDiv)
                 this.aFormClass.validationHelper.initializeTooltip(this.wrapper, tooltipWrapperDiv)
             }
+
             this.wrapper?.append(selectElement)
-            this.wrapper?.append(liveRegion)
 
             if (this.selectModel?.multiple) {
                 selectElement.setAttribute('multiple', '')
@@ -194,67 +197,53 @@ export class SelectBuilder {
             $(this.wrapper).find('.dropdown').dropdown({
                 clearable: true,
                 forceSelection: false,
-                showOnFocus: true,
-                action: (text, value, element) => {
-                    const dropDownElement = this.wrapper.querySelector('.ui.dropdown')
-                    if (this.selectModel.multiple) {
-                        const currentValues = $(this.wrapper).find('.dropdown').dropdown('get value')
-                        const corrected = (currentValues as string[]).filter((value1, index) => value1 !== "")
-                        if (!corrected.includes(value)) {
-                            const anchorElem = document.createElement('a');
-                            anchorElem.classList.add('ui', 'label', 'transition', 'visible');
-                            anchorElem.setAttribute('data-value', value);
-                            anchorElem.setAttribute('data-label', text);
-                            const iTag =  document.createElement('i')
-                            anchorElem.innerText = text
-                            iTag.classList.add('delete', 'icon')
-                            anchorElem.append(iTag)
-                            dropDownElement.prepend(anchorElem)
-                            corrected.push(value)
-                            this.aFormClass.setFormData(corrected, this.selectModel?.key as string);
-                            const storeData = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
-                            this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId,
-                                data: {...storeData, ...{[this.selectModel?.key as string]: corrected}}}))
-                        }
-                    } else {
-                        const textElement = dropDownElement.querySelector('.text');
-                        if (textElement) {
-                            textElement.classList.remove('default')
-                            textElement.innerHTML = text;
-                        } else {
-                            const textDiv = document.createElement('div')
-                            textDiv.classList.add('text')
-                            textDiv.innerText = text
-
-                            dropDownElement.append(textDiv)
-                        }
-                        this.aFormClass.setFormData(value, this.selectModel?.key as string);
+                showOnFocus: false,
+                allowTab: false,
+                onChange: (v: string, label: string, z) => {
+                    if (!this.internalChanges) {
+                        this.aFormClass.setFormData(v, this.selectModel?.key as string)
                         const storeData = getFormById(this.aFormClass.store.getState().formData, this.aFormClass.uniqFormId)?.data
-                        this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId,
-                            data: {...storeData, ...{[this.selectModel?.key as string]: value}}}))
-                        $(this.wrapper).find('.dropdown').dropdown('toggle')
+                        this.aFormClass.store.dispatch(updateFormData({id: this.aFormClass.uniqFormId, data: {...storeData, ...{[this.selectModel?.key as string]: v}}}))
+                        // this.aFormClass.formLiveRegion.innerText = "Selected, " + label
+                    }
+                    if (this.selectModel.multiple) {
+                        // tslint:disable-next-line:no-unused-expression
+                        $(this.wrapper).find('.remove.icon')
+                            .hide()
+
+                    } else {
+                        $(this.wrapper).find('.remove.icon')
+                            .attr('aria-label', z)
                     }
                 },
+                onAdd: (addedValue, addedText, addedElement) => {
+                    $(addedElement).attr('aria-selected', 'true');
+                    $(this.wrapper).find(`a[data-value='${addedValue}']`)
+                        .attr('aria-label', `${addedText}` )
+                        .find('i')
+                        .attr('role', 'button')
+                        .attr('tabIndex', '0')
+                        .attr('aria-label', `Click to remove ${addedText}`);
+                },
+                onRemove: (removedValue, removedText, removedElement) => {
+                    $(removedElement).attr('aria-selected', 'false')
+                },
                 onShow: () => {
-                    $(this.wrapper).find('input.search').attr('aria-expanded', 'true')
+                    $(this.wrapper).find('input.search')
+                        .attr('aria-expanded', 'true')
                 },
                 onHide: () => {
                     $(this.wrapper).find('input.search').attr('aria-expanded', 'false')
                     this.aFormClass.formManager.form('is valid', this.selectModel.key, true)
-                },
-                onNoResults: () => {
-                    liveRegion.innerText = "No result found, please try narrowing your search."
                 }
             })
 
-            // fromEvent($(this.wrapper).find('input.search'), 'keydown')
-            //     .pipe(debounceTime(1000)).subscribe(value => {
-            //     if (this.wrapper) {
-            //         const selection = $(this.wrapper).find('.menu')?.find('.selected')
-            //         liveRegion.innerText = `${selection?.text()}`
-            //     }
-            // })
+            if (this.selectModel.multiple) {
+                $(this.wrapper).find('input.search')?.attr('aria-multiselectable', 'true')
+                $(this.wrapper).find('input.search')?.attr('aria-autocomplete', 'true')
+            }
 
+            $(this.wrapper).find('.dropdown>i.dropdown').attr('tabIndex', '-1')
 
             $(this.wrapper).find('input.search')
                 .attr('role', 'combobox')
@@ -267,12 +256,14 @@ export class SelectBuilder {
                 .on('input', (v) => {
                     if (v) {
                         const length = $(this.wrapper).find('div.menu')?.children()?.not('.filtered')?.length
-                        liveRegion.innerHTML = `${length} options available`
+                        // liveRegion.innerHTML = `${length} options available`
                     } else {
                         const length = $(this.wrapper).find('div.menu')?.length
-                        liveRegion.innerHTML = `${length} options available`
+                        // liveRegion.innerHTML = `${length} options available`
                     }
                 })
+
+
             $(this.wrapper).find('div.menu')
                 .attr('id', menuId)
                 .attr('role', 'listbox')
@@ -295,23 +286,21 @@ export class SelectBuilder {
                 const elementId = uuidV4();
                 element.setAttribute('id', elementId)
                 element.setAttribute('role', "option")
+                element.setAttribute('aria-label', element.innerText)
             })
 
-            const textId = uuidV4()
-            $(this.wrapper).find('div.ui.dropdown>div.text')
-                .attr('id', textId)
+            if (!this.selectModel.multiple) {
+                const textId = uuidV4()
+                $(this.wrapper).find('div.ui.dropdown>div.text')
+                    .attr('id', textId)
 
-            $(this.wrapper).find('div.ui.dropdown>input.search')
-                .attr('aria-describedby', textId)
+                $(this.wrapper).find('div.ui.dropdown>input.search')
+                    .attr('aria-describedby', textId)
+            }
 
             if (this.selectModel.validate?.required) {
                 selectElement.setAttribute('aria-required', 'true')
                 this.wrapper.querySelectorAll('input')?.forEach(value => value.setAttribute('aria-required', 'true'))
-            }
-
-            if (data[this.selectModel.key]) {
-                const dataTag = this.wrapper.querySelector('.ui.dropdown')?.querySelector('.menu')?.querySelector(`[data-value='${data[this.selectModel.key]}']`)
-                this.wrapper.querySelector('.ui.dropdown').querySelector('.text').innerHTML = dataTag?.getAttribute('data-text')
             }
         }
         $(this.wrapper).hide()
